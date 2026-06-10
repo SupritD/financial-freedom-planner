@@ -15,7 +15,13 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/me', [AuthController::class, 'me']);
         
-        // Future endpoints: Income, Expense, Goals etc.
+        // Income Domain
+        Route::get('/income', [\App\Http\Controllers\Api\V1\Income\IncomeController::class, 'index']);
+        Route::post('/income', [\App\Http\Controllers\Api\V1\Income\IncomeController::class, 'store']);
+        
+        // Expense Domain
+        Route::get('/expenses', [\App\Http\Controllers\Api\V1\Expense\ExpenseController::class, 'index']);
+        Route::post('/expenses', [\App\Http\Controllers\Api\V1\Expense\ExpenseController::class, 'store']);
     });
     
 });
