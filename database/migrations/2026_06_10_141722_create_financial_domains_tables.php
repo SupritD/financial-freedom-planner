@@ -78,8 +78,8 @@ return new class extends Migration
             $table->uuid('tenant_id');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->ulid('category_id');
-            $table->string('title'); // Encrypted cast in model
-            $table->decimal('amount', 15, 4); // Encrypted cast in model
+            $table->text('title'); // Encrypted cast in model
+            $table->decimal('amount', 15, 4);
             $table->char('currency', 3)->default('INR');
             $table->decimal('base_currency_amount', 15, 4);
             $table->decimal('exchange_rate', 12, 6)->default(1.0);

@@ -27,7 +27,7 @@ class Expense extends Model
 
     protected $casts = [
         'title' => 'encrypted',
-        'amount' => 'encrypted',
+        'amount' => 'decimal:4',
         'base_currency_amount' => 'decimal:4',
         'exchange_rate' => 'decimal:6',
         'expense_date' => 'date',

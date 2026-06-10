@@ -15,6 +15,7 @@ class LedgerEntry extends Model
     protected $fillable = [
         'user_id',
         'tenant_id',
+        'account_id',
         'transaction_ref_type',
         'transaction_ref_id',
         'account_type',

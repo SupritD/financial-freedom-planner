@@ -27,8 +27,8 @@ class CreateExpenseAction
                 'user_id' => $data['user_id'],
                 'tenant_id' => $data['tenant_id'],
                 'category_id' => $data['category_id'],
-                'title' => encrypt($data['title']), // Handled by cast, but being explicit for prototype
-                'amount' => encrypt($data['amount']),
+                'title' => $data['title'],
+                'amount' => $data['amount'],
                 'currency' => $data['currency'] ?? 'INR',
                 'base_currency_amount' => $data['base_currency_amount'] ?? $data['amount'],
                 'exchange_rate' => $data['exchange_rate'] ?? 1.0,
@@ -48,7 +48,7 @@ class CreateExpenseAction
             $bankAccount = LedgerAccount::firstOrCreate([
                 'user_id' => $data['user_id'],
                 'tenant_id' => $data['tenant_id'],
-                'account_type' => 'asset',
+                'account_type' => 'savings',
                 'name' => 'Primary Bank Account'
             ]);
 

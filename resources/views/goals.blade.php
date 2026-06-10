@@ -1,0 +1,52 @@
+@extends('layouts.app')
+
+@section('title', 'Financial Goals | Financial Freedom Planner')
+@section('header', 'Your Financial Goals')
+
+@section('content')
+    <div class="grid-3">
+        @foreach($goals as $goal)
+            <div class="glass-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="color: var(--text-primary); font-size: 1.25rem;">{{ $goal['name'] }}</h3>
+                    @if($goal['is_completed'])
+                        <i class="ph-fill ph-check-circle" style="color: var(--success); font-size: 1.5rem;"></i>
+                    @else
+                        <i class="ph ph-target" style="color: var(--accent-primary); font-size: 1.5rem;"></i>
+                    @endif
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;">
+                        <span style="color: var(--text-secondary);">Progress</span>
+                        <span style="color: var(--text-primary); font-weight: 600;">{{ $goal['percentage'] }}%</span>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden;">
+                        <div style="width: {{ $goal['percentage'] }}%; height: 100%; background: var(--accent-primary); border-radius: 99px;"></div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <div class="metric-title" style="margin-bottom: 0.25rem;">Current / Target</div>
+                        <div style="font-size: 1.125rem; font-weight: 600;">
+                            ₹{{ number_format($goal['current_amount']) }} <span style="color: var(--text-secondary); font-size: 0.875rem;">/ ₹{{ number_format($goal['target_amount']) }}</span>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="metric-title" style="margin-bottom: 0.25rem;">Deadline</div>
+                        <div style="color: var(--text-secondary); font-size: 0.875rem;">{{ $goal['deadline'] }}</div>
+                    </div>
+                </div>
+            </div>
+        @endforeach
+        
+        <!-- Add New Goal Card -->
+        <div class="glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; border: 2px dashed var(--border); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-primary)';" onmouseout="this.style.borderColor='var(--border)';">
+            <i class="ph ph-plus" style="font-size: 2rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
+            <span style="color: var(--text-secondary); font-weight: 500;">Add New Goal</span>
+        </div>
+    </div>
+@endsection

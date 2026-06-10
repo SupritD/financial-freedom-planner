@@ -11,7 +11,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(
+            \Domain\SharedKernel\Contracts\LedgerRepositoryInterface::class,
+            \Domain\SharedKernel\Repositories\EloquentLedgerRepository::class
+        );
     }
 
     /**

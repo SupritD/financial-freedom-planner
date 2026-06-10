@@ -43,7 +43,7 @@ class RecordIncomeEntryAction
             $bankAccount = LedgerAccount::firstOrCreate([
                 'user_id' => $data['user_id'],
                 'tenant_id' => $data['tenant_id'],
-                'account_type' => 'asset',
+                'account_type' => 'savings',
                 'name' => 'Primary Bank Account'
             ]);
 

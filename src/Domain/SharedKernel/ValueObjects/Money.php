@@ -9,16 +9,20 @@ final readonly class Money
 {
     private const SCALE = 4;
 
+    private string $amount;
+    private Currency $currency;
+
     public function __construct(
-        private string $amount,
-        private Currency $currency
+        string|float|int $amount,
+        Currency $currency
     ) {
         if (!is_numeric($amount)) {
             throw new InvalidArgumentException("Amount must be numeric.");
         }
         
         // Normalize amount to scale
-        $this->amount = bcadd($amount, '0', self::SCALE);
+        $this->amount = bcadd((string)$amount, '0', self::SCALE);
+        $this->currency = $currency;
     }
 
     public static function of(string|float|int $amount, string|Currency $currency = 'INR'): self

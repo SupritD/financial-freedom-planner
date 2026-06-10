@@ -15,7 +15,8 @@ class EloquentLedgerRepository implements LedgerRepositoryInterface
     public function getBalance(string $accountId): string
     {
         $latest = LedgerEntry::where('account_id', $accountId)
-            ->latest('posted_at')
+            ->orderBy('posted_at', 'desc')
+            ->orderBy('id', 'desc')
             ->first();
             
         return $latest ? (string) $latest->balance_after : '0.0000';

@@ -35,7 +35,7 @@ class RecordDebtPaymentAction
             $bankAccount = LedgerAccount::firstOrCreate([
                 'user_id' => $debt->user_id,
                 'tenant_id' => $debt->tenant_id,
-                'account_type' => 'asset',
+                'account_type' => 'savings',
                 'name' => 'Primary Bank Account'
             ]);
 

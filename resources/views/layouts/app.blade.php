@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'Financial Freedom Planner')</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <!-- Phosphor Icons for modern thin icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <a href="{{ route('dashboard') }}" class="brand">
+            <i class="ph ph-infinity"></i>
+            FF<span>Planner</span>
+        </a>
+
+        <nav class="nav-links">
+            <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <i class="ph ph-squares-four"></i> Dashboard
+            </a>
+            <a href="{{ route('transactions') }}" class="nav-link {{ request()->routeIs('transactions') ? 'active' : '' }}">
+                <i class="ph ph-arrows-left-right"></i> Transactions
+            </a>
+            <a href="#" class="nav-link">
+                <i class="ph ph-target"></i> Goals
+            </a>
+            <a href="#" class="nav-link">
+                <i class="ph ph-bank"></i> Debt
+            </a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-bar">
+            <h2>@yield('header')</h2>
+            <div class="user-profile">
+                <i class="ph ph-user-circle"></i>
+                <span>{{ auth()->user()->name ?? 'Demo User' }}</span>
+            </div>
+        </header>
+
+        @yield('content')
+    </main>
+
+</body>
+</html>

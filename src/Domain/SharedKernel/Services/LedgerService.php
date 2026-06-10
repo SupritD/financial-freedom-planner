@@ -28,7 +28,10 @@ class LedgerService
         }
 
         DB::transaction(function () use ($userId, $tenantId, $debitAccountId, $creditAccountId, $amount, $transactionRefType, $transactionRefId) {
-            
+            // Fetch accounts to get their real types
+            $debitAccount = \Domain\SharedKernel\Models\LedgerAccount::find($debitAccountId);
+            $creditAccount = \Domain\SharedKernel\Models\LedgerAccount::find($creditAccountId);
+
             // Record Debit
             $currentDebitBalanceStr = $this->ledgerRepository->getBalance($debitAccountId);
             $currentDebitBalance = Money::of($currentDebitBalanceStr, $amount->getCurrency());
@@ -40,7 +43,7 @@ class LedgerService
                 'account_id' => $debitAccountId,
                 'transaction_ref_type' => $transactionRefType,
                 'transaction_ref_id' => $transactionRefId,
-                'account_type' => 'asset', // Simplified for prototype
+                'account_type' => $debitAccount->account_type,
                 'entry_type' => 'debit',
                 'amount' => $amount->getAmount(),
                 'currency' => $amount->getCurrency()->getCode(),
@@ -59,7 +62,7 @@ class LedgerService
                 'account_id' => $creditAccountId,
                 'transaction_ref_type' => $transactionRefType,
                 'transaction_ref_id' => $transactionRefId,
-                'account_type' => 'asset', // Simplified for prototype
+                'account_type' => $creditAccount->account_type,
                 'entry_type' => 'credit',
                 'amount' => $amount->getAmount(),
                 'currency' => $amount->getCurrency()->getCode(),
