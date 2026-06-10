@@ -16,6 +16,10 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
+        if (!$user->is_onboarded) {
+            return redirect()->route('onboarding');
+        }
+        
         // Compute Net Worth (Assets - Liabilities)
         // Savings = asset, Debt = liability
         $savingsAccounts = LedgerAccount::where('user_id', $user->id)

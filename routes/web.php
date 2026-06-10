@@ -13,12 +13,25 @@ Route::get('/', function () {
 Route::middleware('guest')->group(function () {
     Route::get('/login', [WebAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [WebAuthController::class, 'login']);
+    Route::get('/register', [WebAuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [WebAuthController::class, 'register']);
+    
+    Route::get('/forgot-password', [WebAuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [WebAuthController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [WebAuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password', [WebAuthController::class, 'resetPassword'])->name('password.store');
 });
 
 // Protected Routes
 Route::middleware('auth')->group(function () {
+    Route::get('/email/verify', [WebAuthController::class, 'showVerifyEmail'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [WebAuthController::class, 'verifyEmail'])->middleware(['signed'])->name('verification.verify');
+    Route::post('/email/verification-notification', [WebAuthController::class, 'sendVerificationEmail'])->middleware(['throttle:6,1'])->name('verification.send');
     Route::post('/logout', [WebAuthController::class, 'logout'])->name('logout');
     
+    Route::get('/onboarding', [\App\Http\Controllers\Web\OnboardingController::class, 'show'])->name('onboarding');
+    Route::post('/onboarding', [\App\Http\Controllers\Web\OnboardingController::class, 'store'])->name('onboarding.store');
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/transactions', [\App\Http\Controllers\Web\TransactionController::class, 'index'])->name('transactions');
     Route::post('/transactions/income', [\App\Http\Controllers\Web\TransactionController::class, 'storeIncome'])->name('transactions.income.store');

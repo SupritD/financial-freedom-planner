@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Financial Freedom Planner</title>
+    <title>Reset Password | Financial Freedom Planner</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -70,32 +70,38 @@
     <div class="auth-container">
         <div class="glass-card auth-card">
             <div style="text-align: center; margin-bottom: 2rem;">
-                <i class="ph ph-infinity" style="font-size: 3rem; color: var(--accent-primary); margin-bottom: 1rem;"></i>
-                <h2>Welcome Back</h2>
-                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Sign in to your financial planner</p>
+                <i class="ph ph-lock-key" style="font-size: 3rem; color: var(--accent-primary); margin-bottom: 1rem;"></i>
+                <h2>Create New Password</h2>
+                <p style="color: var(--text-secondary); margin-top: 0.5rem;">Enter your new password below</p>
             </div>
 
-            <form method="POST" action="{{ route('login') }}">
+            <form method="POST" action="{{ route('password.store') }}">
                 @csrf
+                <input type="hidden" name="token" value="{{ $request->route('token') }}">
+                
                 <div class="form-group">
                     <label class="form-label">Email Address</label>
-                    <input type="email" name="email" class="form-input" value="{{ old('email', 'demo@example.com') }}" required autofocus>
+                    <input type="email" name="email" class="form-input" value="{{ old('email', $request->email) }}" required readonly>
                     @error('email')
                         <div class="error-msg">{{ $message }}</div>
                     @enderror
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" class="form-input" value="password" required>
+                    <label class="form-label">New Password</label>
+                    <input type="password" name="password" class="form-input" required autofocus>
+                    @error('password')
+                        <div class="error-msg">{{ $message }}</div>
+                    @enderror
                 </div>
 
-                <button type="submit" class="btn-primary">Sign In</button>
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" name="password_confirmation" class="form-input" required>
+                </div>
+
+                <button type="submit" class="btn-primary">Reset Password</button>
             </form>
-            
-            <div style="margin-top: 1.5rem; text-align: center; font-size: 0.875rem; color: var(--text-secondary);">
-                Don't have an account? <a href="{{ route('register') }}" style="color: var(--accent-primary); text-decoration: none; font-weight: 500;">Sign Up</a>
-            </div>
         </div>
     </div>
 </body>
