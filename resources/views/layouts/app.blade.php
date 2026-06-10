@@ -27,11 +27,17 @@
             <a href="{{ route('transactions') }}" class="nav-link {{ request()->routeIs('transactions') ? 'active' : '' }}">
                 <i class="ph ph-arrows-left-right"></i> Transactions
             </a>
+            <a href="{{ route('emergency') }}" class="nav-link {{ request()->routeIs('emergency') ? 'active' : '' }}">
+                <i class="ph ph-shield-check"></i> Emergency Fund
+            </a>
             <a href="{{ route('goals') }}" class="nav-link {{ request()->routeIs('goals') ? 'active' : '' }}">
                 <i class="ph ph-target"></i> Goals
             </a>
             <a href="{{ route('debt') }}" class="nav-link {{ request()->routeIs('debt') ? 'active' : '' }}">
                 <i class="ph ph-bank"></i> Debt
+            </a>
+            <a href="{{ route('settings') }}" class="nav-link {{ request()->routeIs('settings') ? 'active' : '' }}">
+                <i class="ph ph-gear"></i> Settings
             </a>
         </nav>
     </aside>
