@@ -14,11 +14,6 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // For prototype purposes, auto-login Demo User if not logged in
-        if (!Auth::check()) {
-            Auth::loginUsingId(1);
-        }
-
         $user = Auth::user();
         
         // Compute Net Worth (Assets - Liabilities)
@@ -77,11 +72,37 @@ class DashboardController extends Controller
             ->take(8)
             ->values();
 
+        // Chart Data (Last 6 Months Income vs Expense)
+        $chartLabels = [];
+        $chartIncome = [];
+        $chartExpense = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $month = Carbon::now()->subMonths($i);
+            $chartLabels[] = $month->format('M Y');
+            
+            $inc = IncomeEntry::where('user_id', $user->id)
+                ->whereMonth('income_date', $month->month)
+                ->whereYear('income_date', $month->year)
+                ->sum('amount');
+                
+            $exp = Expense::where('user_id', $user->id)
+                ->whereMonth('expense_date', $month->month)
+                ->whereYear('expense_date', $month->year)
+                ->sum('amount');
+                
+            $chartIncome[] = $inc;
+            $chartExpense[] = $exp;
+        }
+
         return view('dashboard', compact(
             'netWorth',
             'monthlyIncome',
             'monthlyExpense',
-            'recentTransactions'
+            'recentTransactions',
+            'chartLabels',
+            'chartIncome',
+            'chartExpense'
         ));
     }
 }

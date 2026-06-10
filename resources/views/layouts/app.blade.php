@@ -8,8 +8,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-    <!-- Phosphor Icons for modern thin icons -->
+    <!-- Phosphor Icons & Chart.js -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -26,10 +27,10 @@
             <a href="{{ route('transactions') }}" class="nav-link {{ request()->routeIs('transactions') ? 'active' : '' }}">
                 <i class="ph ph-arrows-left-right"></i> Transactions
             </a>
-            <a href="#" class="nav-link">
+            <a href="{{ route('goals') }}" class="nav-link {{ request()->routeIs('goals') ? 'active' : '' }}">
                 <i class="ph ph-target"></i> Goals
             </a>
-            <a href="#" class="nav-link">
+            <a href="{{ route('debt') }}" class="nav-link {{ request()->routeIs('debt') ? 'active' : '' }}">
                 <i class="ph ph-bank"></i> Debt
             </a>
         </nav>
@@ -38,10 +39,12 @@
     <main class="main-content">
         <header class="top-bar">
             <h2>@yield('header')</h2>
-            <div class="user-profile">
+            <form method="POST" action="{{ route('logout') }}" class="user-profile" style="cursor: pointer;" onclick="this.submit();">
+                @csrf
                 <i class="ph ph-user-circle"></i>
                 <span>{{ auth()->user()->name ?? 'Demo User' }}</span>
-            </div>
+                <i class="ph ph-sign-out" style="margin-left: 0.5rem; color: var(--text-secondary);"></i>
+            </form>
         </header>
 
         @yield('content')

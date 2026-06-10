@@ -32,4 +32,26 @@ class GoalController extends Controller
 
         return view('goals', compact('goals'));
     }
+
+    public function store(\Illuminate\Http\Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:255',
+            'target_amount' => 'required|numeric|min:1',
+            'deadline' => 'nullable|date',
+        ]);
+
+        FinancialGoal::create([
+            'user_id' => Auth::id(),
+            'tenant_id' => Auth::user()->tenant_id,
+            'name' => $data['name'],
+            'target_amount' => $data['target_amount'],
+            'current_amount' => 0,
+            'currency' => 'INR',
+            'deadline' => $data['deadline'] ?? null,
+            'is_completed' => false,
+        ]);
+
+        return back()->with('success', 'Goal created successfully!');
+    }
 }

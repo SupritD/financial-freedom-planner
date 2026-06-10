@@ -21,6 +21,13 @@
         </div>
     </div>
 
+    <div class="glass-card" style="margin-bottom: 2rem;">
+        <div class="metric-title" style="font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--text-primary);">6-Month Cashflow</div>
+        <div style="position: relative; height: 300px; width: 100%;">
+            <canvas id="cashflowChart"></canvas>
+        </div>
+    </div>
+
     <div class="glass-card">
         <div class="metric-title" style="font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--text-primary);">Recent Transactions</div>
         
@@ -53,4 +60,62 @@
             </tbody>
         </table>
     </div>
+
+    <script>
+        const ctx = document.getElementById('cashflowChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {!! json_encode($chartLabels) !!},
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: {!! json_encode($chartIncome) !!},
+                        backgroundColor: 'rgba(16, 185, 129, 0.5)',
+                        borderColor: '#10b981',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Expenses',
+                        data: {!! json_encode($chartExpense) !!},
+                        backgroundColor: 'rgba(239, 68, 68, 0.5)',
+                        borderColor: '#ef4444',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#94a3b8'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#f8fafc'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 @endsection
