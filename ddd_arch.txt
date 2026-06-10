@@ -1,0 +1,1831 @@
+
+
+
+Financial Freedom Planner
+Laravel 12 — DDD Project Architecture
+Domain-Driven Design  |  File Tree  |  Class Registry  |  Layer Responsibilities
+
+
+Project
+Financial Freedom Planner
+Framework
+Laravel 12  +  PHP 8.3+
+Architecture
+Domain-Driven Design (DDD)
+Pattern
+Layered: Presentation > Application > Domain > Infrastructure
+Document
+Project Structure & File Tree
+Date
+June 2026
+
+
+12 Bounded Domains
+#
+Domain
+Core Responsibilities
+01
+Auth
+Registration, Login, 2FA, Password Reset, Trusted Devices
+02
+Income
+Salary Sources, Income Entries, Financial Year Tracking
+03
+Expense
+Expense Tracking, Categories, Budget Management, Trends
+04
+Savings
+Savings Buckets, Deposits, Withdrawals, Milestones
+05
+EmergencyFund
+Fund Setup, Gap Analysis, Coverage Calculation
+06
+Goal
+Financial Goals, Contributions, TVM Projections, Milestones
+07
+Investment
+Portfolio, SIP Schedules, XIRR, CAGR, Benchmarks
+08
+Debt
+Loans, Amortization, Prepayment, Payoff Strategy
+09
+Report
+Monthly/Quarterly/Yearly Reports, Health Score, Exports
+10
+Notification
+In-App, Email, Push — Preferences, Templates, Delivery
+11
+Dashboard
+KPI Aggregation, Snapshot Reading, Cache Management
+12
+SharedKernel
+Ledger, Money Value Object, Audit, Multi-Tenancy, DPDP
+
+1. DDD Architecture Overview
+The Financial Freedom Planner follows a strict 4-layer Domain-Driven Design architecture. Business logic lives exclusively in the Domain layer. The Presentation layer is thin — controllers validate via Form Requests and delegate to Application Actions immediately.
+
+1.1 Four-Layer Architecture
+Layer
+Location
+Responsibility
+Presentation Layer
+app/Http/Controllers
+app/Http/Resources
+routes/
+Receives HTTP requests. Delegates immediately to Application layer. Zero business logic. Returns API Resources or Blade views.
+Application Layer
+src/Domain/{Name}/Actions
+src/Domain/{Name}/Services
+src/Domain/{Name}/DTOs
+Orchestrates use cases. Calls Domain services and repositories. Handles transactions. Dispatches Events. No SQL or HTTP knowledge.
+Domain Layer
+src/Domain/{Name}/Models
+src/Domain/{Name}/Contracts
+src/Domain/{Name}/ValueObjects
+src/Domain/{Name}/Events
+Pure business logic. Domain Models, Value Objects, Domain Events, Repository Contracts (interfaces). Zero framework dependency.
+Infrastructure Layer
+src/Domain/{Name}/Repositories
+app/Jobs
+app/Listeners
+app/Notifications
+Implements Domain Contracts. Eloquent repositories, queue jobs, external APIs, file storage. Framework-dependent but domain-decoupled.
+
+1.2 DDD Principles Applied
+Principle
+Implementation in this Project
+Ubiquitous Language
+Every class, method, variable uses domain terminology. "GoalContribution" not "GoalPayment". "EmergencyFundDeposit" not "FundAdd".
+Bounded Contexts
+12 domains are isolated. Income domain knows nothing about Investment domain. Cross-domain communication via Events or Application Services only.
+Dependency Inversion
+Domain layer defines Repository interfaces (Contracts). Infrastructure layer implements them. Domain never imports Eloquent directly.
+Value Objects
+Money amounts wrapped in Money value object. Immutable. BCMath arithmetic inside. Prevents raw float usage across the codebase.
+Domain Events
+State changes dispatch Domain Events (GoalMilestoneReached, BudgetExceeded). Listeners handle side effects (notifications, cache, audit).
+Aggregate Roots
+FinancialGoal is an aggregate root — owns GoalContributions. SavingAccount owns SavingTransactions. Debt owns AmortizationSchedule.
+Repository Pattern
+All data access through Repository interfaces. Application layer is testable without DB. Infrastructure swappable (e.g., from Eloquent to Doctrine).
+CQRS (Soft)
+Read models (financial_snapshots, expense_trends) are separate from write models. Dashboard reads from snapshots, not live aggregate queries.
+
+1.3 Request Lifecycle
+FLOW
+HTTP Request  ->  Route  ->  Middleware (Auth, Tenant, RateLimit, Idempotency)
+  ->  FormRequest (validation)  ->  Controller (thin — 5 lines max)
+  ->  Action (use-case orchestrator)  ->  Service (domain logic)
+  ->  Repository (data access)  ->  Model (Eloquent)
+  ->  Domain Event dispatched  ->  Listeners (notifications, cache, audit)
+  ->  API Resource (response formatting)  ->  HTTP Response
+
+2. Root Project Structure
+The project separates Laravel framework concerns (app/) from domain business logic (src/Domain/). This allows the Domain layer to be framework-agnostic and independently testable.
+
+financial-freedom-planner/
+|
+|-- app/                              # Laravel Application Layer
+|   |-- Console/                      # Artisan commands
+|   |-- Exceptions/                   # Exception handlers
+|   |-- Http/
+|   |   |-- Controllers/              # Thin HTTP controllers (API + Web)
+|   |   |-- Middleware/               # HTTP middleware stack
+|   |   |-- Requests/                 # Form Request validation classes
+|   |   |-- Resources/               # API Resource transformers
+|   |-- Jobs/                         # Queue jobs (report gen, XIRR, etc.)
+|   |-- Listeners/                    # Event listeners (notifications, cache)
+|   |-- Notifications/               # Laravel notification classes
+|   |-- Policies/                     # Authorization policies
+|   |-- Providers/                    # Service providers
+|
+|-- src/                              # Domain Layer (DDD core)
+|   |-- Domain/                       # All bounded contexts live here
+|   |   |-- Auth/                     # Authentication domain
+|   |   |-- Income/                   # Salary & income domain
+|   |   |-- Expense/                  # Expense tracking domain
+|   |   |-- Savings/                  # Savings management domain
+|   |   |-- EmergencyFund/            # Emergency fund domain
+|   |   |-- Goal/                     # Financial goals domain
+|   |   |-- Investment/               # Investment tracking domain
+|   |   |-- Debt/                     # Debt management domain
+|   |   |-- Report/                   # Reports & analytics domain
+|   |   |-- Notification/             # Notification management domain
+|   |   |-- Dashboard/               # Dashboard aggregation domain
+|   |   |-- SharedKernel/            # Shared DDD building blocks
+|
+|-- database/
+|   |-- migrations/                   # 58 ordered migrations
+|   |-- seeders/                      # 23 seeders (prod + test)
+|   |-- factories/                    # Eloquent model factories
+|
+|-- routes/
+|   |-- api.php                       # All API routes (v1)
+|   |-- web.php                       # Blade web routes
+|   |-- auth.php                      # Auth-specific routes
+|   |-- admin.php                     # Admin-only routes
+|   |-- channels.php                  # Broadcast channels
+|
+|-- config/                            # All configuration files
+|-- resources/                        # Blade views, JS, CSS
+|-- storage/                          # Logs, cache, compiled files
+|-- tests/                            # PHPUnit / Pest tests
+|   |-- Unit/                         # Domain logic unit tests
+|   |-- Feature/                      # API feature tests
+|   |-- Integration/                  # Repository integration tests
+|
+|-- .env.example                      # Environment template
+|-- composer.json                     # PHP dependencies
+|-- phpunit.xml                       # Test configuration
+`-- README.md                         # Project documentation
+
+3. Domain Folder Template
+Every bounded domain follows this identical folder structure. Consistency across domains means any developer can navigate any domain immediately. The structure enforces DDD layer separation at the filesystem level.
+
+src/Domain/{DomainName}/
+|
+|-- Actions/                          # Use-case orchestrators (1 class = 1 use case)
+|   |-- Create{Entity}Action.php      # e.g. CreateIncomeEntryAction.php
+|   |-- Update{Entity}Action.php
+|   |-- Delete{Entity}Action.php
+|   `-- {SpecificUseCase}Action.php   # e.g. RecordSipTransactionAction.php
+|
+|-- Contracts/                        # Repository interfaces (no Eloquent here)
+|   |-- {Entity}RepositoryInterface.php
+|   `-- {Entity}ReadRepositoryInterface.php   # Separate read model contract
+|
+|-- DTOs/                             # Data Transfer Objects (typed input/output)
+|   |-- {Entity}Data.php              # Input DTO from FormRequest
+|   `-- {Entity}SummaryData.php       # Output DTO for API Resources
+|
+|-- Events/                           # Domain events
+|   |-- {Entity}Created.php
+|   |-- {Entity}Updated.php
+|   `-- {DomainEvent}Occurred.php    # e.g. BudgetExceeded.php
+|
+|-- Exceptions/                       # Domain-specific exceptions
+|   |-- {Entity}NotFoundException.php
+|   `-- {DomainRule}ViolationException.php   # e.g. InsufficientFundsException.php
+|
+|-- Models/                           # Eloquent models (domain models)
+|   |-- {Entity}.php                  # Primary entity model
+|   `-- {RelatedEntity}.php
+|
+|-- Repositories/                     # Eloquent implementations of Contracts
+|   |-- Eloquent{Entity}Repository.php
+|   `-- Eloquent{Entity}ReadRepository.php
+|
+|-- Services/                         # Domain services (complex business logic)
+|   |-- {DomainName}Service.php       # Primary domain service
+|   `-- {Calculation}Service.php      # e.g. GoalProjectionService.php
+|
+|-- ValueObjects/                     # Immutable domain value types
+|   |-- Money.php                     # BCMath-backed monetary value
+|   |-- Percentage.php
+|   `-- DateRange.php
+|
+`-- Enums/                            # PHP 8.1+ backed enums
+    |-- {Entity}StatusEnum.php        # e.g. GoalStatusEnum.php
+    `-- {CategoryType}Enum.php
+
+3.1 Folder Responsibility Map
+File / Class
+Responsibility
+Actions/
+Single-responsibility use-case classes. Called by Controllers. Orchestrate Services and Repositories. Wrap in DB transactions where needed.
+Contracts/
+PHP interfaces for repositories. Domain layer depends on these — never on Eloquent directly. Enables swapping storage implementations.
+DTOs/
+Typed data transfer objects. FormRequests create Input DTOs. Actions return Output DTOs. No raw arrays passed between layers.
+Events/
+Immutable domain events dispatched when state changes. Carry the minimum data needed by listeners. Named in past tense: BudgetExceeded.
+Exceptions/
+Business rule violations as typed exceptions. Caught by exception handler and converted to HTTP responses. DomainException base class.
+Models/
+Eloquent models with no business logic inside them. Only relationships, casts, scopes, and fillable. Logic lives in Services.
+Repositories/
+Eloquent implementations of Contract interfaces. All SQL queries live here. No SQL anywhere else in the application.
+Services/
+Complex domain calculations and business rules. Stateless. Injected into Actions. e.g. GoalProjectionService, XirrCalculationService.
+ValueObjects/
+Immutable typed wrappers. Money wraps BCMath. Prevents primitive obsession. Two Money instances are equal if same amount + currency.
+Enums/
+PHP 8.1+ backed enums for status fields, type classifications. Replaces magic string constants across the codebase.
+
+4. Domain File Trees
+Complete file tree for all 12 bounded domains. Every domain follows the identical template from Section 3. File names use the exact domain language — no generic names like "Manager" or "Handler".
+
+4.1 Auth Domain
+src/Domain/Auth/
+|-- Actions/
+|   |-- RegisterUserAction.php
+|   |-- LoginUserAction.php
+|   |-- LogoutUserAction.php
+|   |-- LogoutAllDevicesAction.php
+|   |-- VerifyEmailAction.php
+|   |-- ResendVerificationEmailAction.php
+|   |-- ForgotPasswordAction.php
+|   |-- ResetPasswordAction.php
+|   |-- Enable2FAAction.php
+|   |-- Confirm2FAAction.php
+|   |-- Disable2FAAction.php
+|   |-- Verify2FACodeAction.php
+|   |-- TrustDeviceAction.php
+|   `-- RevokeDeviceAction.php
+|-- Contracts/
+|   |-- UserRepositoryInterface.php
+|   |-- TrustedDeviceRepositoryInterface.php
+|   `-- LoginEventRepositoryInterface.php
+|-- DTOs/
+|   |-- RegisterData.php
+|   |-- LoginData.php
+|   |-- ResetPasswordData.php
+|   `-- ProfileSetupData.php
+|-- Events/
+|   |-- UserRegistered.php
+|   |-- UserEmailVerified.php
+|   |-- UserLoggedIn.php
+|   |-- UserLoggedOut.php
+|   |-- LoginFailed.php
+|   |-- AccountLocked.php
+|   |-- PasswordChanged.php
+|   |-- TwoFactorEnabled.php
+|   |-- TwoFactorDisabled.php
+|   `-- NewDeviceDetected.php
+|-- Exceptions/
+|   |-- InvalidCredentialsException.php
+|   |-- AccountLockedException.php
+|   |-- AccountNotVerifiedException.php
+|   |-- AccountSuspendedException.php
+|   |-- Invalid2FACodeException.php
+|   `-- ExpiredVerificationLinkException.php
+|-- Models/
+|   |-- User.php
+|   |-- TrustedDevice.php
+|   `-- LoginEvent.php
+|-- Repositories/
+|   |-- EloquentUserRepository.php
+|   |-- EloquentTrustedDeviceRepository.php
+|   `-- EloquentLoginEventRepository.php
+|-- Services/
+|   |-- AuthService.php
+|   |-- TwoFactorService.php
+|   |-- DeviceFingerprintService.php
+|   `-- LoginAnomalyDetectionService.php
+|-- ValueObjects/
+|   |-- DeviceFingerprint.php
+|   `-- IpAddress.php
+`-- Enums/
+    `-- AccountStatusEnum.php
+
+4.2 Income Domain
+src/Domain/Income/
+|-- Actions/
+|   |-- CreateSalarySourceAction.php
+|   |-- UpdateSalarySourceAction.php
+|   |-- DeleteSalarySourceAction.php
+|   |-- RecordIncomeEntryAction.php
+|   |-- UpdateIncomeEntryAction.php
+|   |-- DeleteIncomeEntryAction.php
+|   `-- SyncRecurringIncomeAction.php
+|-- Contracts/
+|   |-- SalarySourceRepositoryInterface.php
+|   `-- IncomeEntryRepositoryInterface.php
+|-- DTOs/
+|   |-- SalarySourceData.php
+|   |-- IncomeEntryData.php
+|   `-- IncomeSummaryData.php
+|-- Events/
+|   |-- SalarySourceCreated.php
+|   |-- IncomeEntryRecorded.php
+|   `-- IncomeEntryDeleted.php
+|-- Exceptions/
+|   |-- SalarySourceNotFoundException.php
+|   `-- IncomeEntryNotFoundException.php
+|-- Models/
+|   |-- SalarySource.php
+|   `-- IncomeEntry.php
+|-- Repositories/
+|   |-- EloquentSalarySourceRepository.php
+|   `-- EloquentIncomeEntryRepository.php
+|-- Services/
+|   `-- IncomeCalculationService.php
+|-- ValueObjects/
+|   `-- FinancialYear.php
+`-- Enums/
+    `-- IncomeSourceTypeEnum.php
+
+4.3 Expense Domain
+src/Domain/Expense/
+|-- Actions/
+|   |-- CreateExpenseAction.php
+|   |-- UpdateExpenseAction.php
+|   |-- DeleteExpenseAction.php
+|   |-- RestoreExpenseAction.php
+|   |-- CreateExpenseCategoryAction.php
+|   |-- UpdateExpenseCategoryAction.php
+|   |-- DeleteExpenseCategoryAction.php
+|   |-- SetCategoryBudgetAction.php
+|   `-- UpdateCategoryBudgetAction.php
+|-- Contracts/
+|   |-- ExpenseRepositoryInterface.php
+|   |-- ExpenseCategoryRepositoryInterface.php
+|   `-- ExpenseBudgetRepositoryInterface.php
+|-- DTOs/
+|   |-- ExpenseData.php
+|   |-- ExpenseCategoryData.php
+|   |-- ExpenseBudgetData.php
+|   `-- ExpenseSummaryData.php
+|-- Events/
+|   |-- ExpenseCreated.php
+|   |-- ExpenseUpdated.php
+|   |-- ExpenseDeleted.php
+|   |-- BudgetWarningThresholdReached.php
+|   `-- BudgetExceeded.php
+|-- Exceptions/
+|   |-- ExpenseNotFoundException.php
+|   |-- SystemCategoryDeletionException.php
+|   `-- ExpenseCategoryNotFoundException.php
+|-- Models/
+|   |-- Expense.php
+|   |-- ExpenseCategory.php
+|   `-- ExpenseBudget.php
+|-- Repositories/
+|   |-- EloquentExpenseRepository.php
+|   |-- EloquentExpenseCategoryRepository.php
+|   `-- EloquentExpenseBudgetRepository.php
+|-- Services/
+|   |-- BudgetCheckService.php
+|   `-- ExpenseTrendService.php
+`-- Enums/
+    `-- ExpenseStatusEnum.php
+
+4.4 Savings Domain
+src/Domain/Savings/
+|-- Actions/
+|   |-- CreateSavingAccountAction.php
+|   |-- UpdateSavingAccountAction.php
+|   |-- DeleteSavingAccountAction.php
+|   |-- DepositToSavingAccountAction.php
+|   `-- WithdrawFromSavingAccountAction.php
+|-- Contracts/
+|   |-- SavingAccountRepositoryInterface.php
+|   `-- SavingTransactionRepositoryInterface.php
+|-- DTOs/
+|   |-- SavingAccountData.php
+|   |-- SavingTransactionData.php
+|   `-- SavingsSummaryData.php
+|-- Events/
+|   |-- SavingAccountCreated.php
+|   |-- SavingDepositMade.php
+|   |-- SavingWithdrawalMade.php
+|   |-- SavingMilestoneReached.php
+|   `-- SavingGoalCompleted.php
+|-- Exceptions/
+|   |-- SavingAccountNotFoundException.php
+|   |-- InsufficientSavingBalanceException.php
+|   `-- NonEmptyAccountDeletionException.php
+|-- Models/
+|   |-- SavingAccount.php
+|   `-- SavingTransaction.php
+|-- Repositories/
+|   |-- EloquentSavingAccountRepository.php
+|   `-- EloquentSavingTransactionRepository.php
+|-- Services/
+|   |-- SavingsProgressService.php
+|   `-- SavingsMilestoneService.php
+`-- Enums/
+    |-- SavingTransactionTypeEnum.php
+    `-- SavingAccountStatusEnum.php
+
+4.5 EmergencyFund Domain
+src/Domain/EmergencyFund/
+|-- Actions/
+|   |-- SetupEmergencyFundAction.php
+|   |-- UpdateEmergencyFundAction.php
+|   |-- DepositToEmergencyFundAction.php
+|   `-- CalculateGapAnalysisAction.php
+|-- Contracts/
+|   `-- EmergencyFundRepositoryInterface.php
+|-- DTOs/
+|   |-- EmergencyFundData.php
+|   `-- GapAnalysisData.php
+|-- Events/
+|   |-- EmergencyFundSetup.php
+|   |-- EmergencyFundDeposited.php
+|   |-- EmergencyFundMilestoneReached.php
+|   `-- EmergencyFundFullyFunded.php
+|-- Exceptions/
+|   |-- EmergencyFundAlreadyExistsException.php
+|   `-- EmergencyFundNotFoundException.php
+|-- Models/
+|   `-- EmergencyFund.php
+|-- Repositories/
+|   `-- EloquentEmergencyFundRepository.php
+`-- Services/
+    `-- EmergencyFundCalculationService.php
+
+4.6 Goal Domain
+src/Domain/Goal/
+|-- Actions/
+|   |-- CreateFinancialGoalAction.php
+|   |-- UpdateFinancialGoalAction.php
+|   |-- DeleteFinancialGoalAction.php
+|   |-- PauseGoalAction.php
+|   |-- ResumeGoalAction.php
+|   |-- AddGoalContributionAction.php
+|   |-- DeleteGoalContributionAction.php
+|   |-- ReorderGoalPriorityAction.php
+|   `-- RecalculateGoalProjectionAction.php
+|-- Contracts/
+|   |-- GoalRepositoryInterface.php
+|   |-- GoalContributionRepositoryInterface.php
+|   `-- GoalProjectionRepositoryInterface.php
+|-- DTOs/
+|   |-- FinancialGoalData.php
+|   |-- GoalContributionData.php
+|   |-- GoalProjectionData.php
+|   `-- GoalSummaryData.php
+|-- Events/
+|   |-- GoalCreated.php
+|   |-- GoalContributionAdded.php
+|   |-- GoalMilestoneReached.php
+|   |-- GoalCompleted.php
+|   |-- GoalBehindSchedule.php
+|   `-- GoalConflictDetected.php
+|-- Exceptions/
+|   |-- GoalNotFoundException.php
+|   |-- GoalAlreadyCompletedException.php
+|   `-- GoalIsPausedException.php
+|-- Models/
+|   |-- FinancialGoal.php
+|   |-- GoalContribution.php
+|   |-- GoalProjection.php
+|   `-- GoalMilestone.php
+|-- Repositories/
+|   |-- EloquentGoalRepository.php
+|   |-- EloquentGoalContributionRepository.php
+|   `-- EloquentGoalProjectionRepository.php
+|-- Services/
+|   |-- GoalProjectionService.php
+|   |-- TimeValueOfMoneyService.php
+|   `-- GoalConflictDetectionService.php
+|-- ValueObjects/
+|   `-- ProjectionScenario.php
+`-- Enums/
+    |-- GoalStatusEnum.php
+    `-- GoalPriorityEnum.php
+
+4.7 Investment Domain
+src/Domain/Investment/
+|-- Actions/
+|   |-- AddInvestmentAction.php
+|   |-- UpdateInvestmentValueAction.php
+|   |-- DeleteInvestmentAction.php
+|   |-- RecordInvestmentTransactionAction.php
+|   |-- CreateSipScheduleAction.php
+|   |-- UpdateSipScheduleAction.php
+|   |-- CancelSipScheduleAction.php
+|   `-- ExecuteSipInstallmentAction.php
+|-- Contracts/
+|   |-- InvestmentRepositoryInterface.php
+|   |-- InvestmentTransactionRepositoryInterface.php
+|   `-- SipScheduleRepositoryInterface.php
+|-- DTOs/
+|   |-- InvestmentData.php
+|   |-- InvestmentTransactionData.php
+|   |-- SipScheduleData.php
+|   `-- PortfolioSummaryData.php
+|-- Events/
+|   |-- InvestmentAdded.php
+|   |-- InvestmentTransactionRecorded.php
+|   |-- InvestmentValueUpdated.php
+|   |-- SipInstallmentDue.php
+|   |-- SipInstallmentExecuted.php
+|   `-- InvestmentMaturing.php
+|-- Exceptions/
+|   |-- InvestmentNotFoundException.php
+|   |-- InsufficientUnitsForSaleException.php
+|   `-- SipScheduleNotFoundException.php
+|-- Models/
+|   |-- Investment.php
+|   |-- InvestmentTransaction.php
+|   |-- InvestmentType.php
+|   `-- SipSchedule.php
+|-- Repositories/
+|   |-- EloquentInvestmentRepository.php
+|   |-- EloquentInvestmentTransactionRepository.php
+|   `-- EloquentSipScheduleRepository.php
+|-- Services/
+|   |-- XirrCalculationService.php
+|   |-- CagrCalculationService.php
+|   |-- PortfolioAllocationService.php
+|   `-- CapitalGainsClassificationService.php
+|-- ValueObjects/
+|   `-- ReturnMetrics.php
+`-- Enums/
+    |-- TransactionTypeEnum.php
+    |-- AssetClassEnum.php
+    `-- GainTypeEnum.php
+
+4.8 Debt Domain
+src/Domain/Debt/
+|-- Actions/
+|   |-- AddDebtAction.php
+|   |-- UpdateDebtAction.php
+|   |-- DeleteDebtAction.php
+|   |-- RecordDebtPaymentAction.php
+|   |-- RecordDebtPrepaymentAction.php
+|   |-- UpdateFloatingRateAction.php
+|   |-- CloseDebtAction.php
+|   `-- GenerateAmortizationScheduleAction.php
+|-- Contracts/
+|   |-- DebtRepositoryInterface.php
+|   |-- DebtPaymentRepositoryInterface.php
+|   `-- AmortizationScheduleRepositoryInterface.php
+|-- DTOs/
+|   |-- DebtData.php
+|   |-- DebtPaymentData.php
+|   |-- PrepaymentData.php
+|   `-- DebtSummaryData.php
+|-- Events/
+|   |-- DebtAdded.php
+|   |-- DebtPaymentRecorded.php
+|   |-- DebtPrepaymentMade.php
+|   |-- DebtInterestRateChanged.php
+|   |-- DebtEmiDueSoon.php
+|   `-- DebtFullyRepaid.php
+|-- Exceptions/
+|   |-- DebtNotFoundException.php
+|   |-- DebtAlreadyClosedException.php
+|   `-- InvalidPrepaymentAmountException.php
+|-- Models/
+|   |-- Debt.php
+|   |-- DebtPayment.php
+|   |-- DebtAmortizationSchedule.php
+|   `-- DebtRateChange.php
+|-- Repositories/
+|   |-- EloquentDebtRepository.php
+|   |-- EloquentDebtPaymentRepository.php
+|   `-- EloquentAmortizationScheduleRepository.php
+|-- Services/
+|   |-- AmortizationService.php
+|   |-- PrepaymentImpactService.php
+|   |-- ForeclosureCalculationService.php
+|   `-- DebtPayoffStrategyService.php
+`-- Enums/
+    |-- DebtStatusEnum.php
+    `-- RateTypeEnum.php
+
+4.9 Report Domain
+src/Domain/Report/
+|-- Actions/
+|   |-- GenerateMonthlyReportAction.php
+|   |-- GenerateQuarterlyReportAction.php
+|   |-- GenerateYearlyReportAction.php
+|   |-- GenerateTaxReportAction.php
+|   |-- ExportReportAsPdfAction.php
+|   |-- ExportReportAsExcelAction.php
+|   |-- ExportReportAsCsvAction.php
+|   `-- ComputeFinancialHealthScoreAction.php
+|-- Contracts/
+|   |-- ReportRepositoryInterface.php
+|   |-- FinancialSnapshotRepositoryInterface.php
+|   `-- HealthScoreRepositoryInterface.php
+|-- DTOs/
+|   |-- ReportPeriodData.php
+|   |-- MonthlyReportData.php
+|   |-- HealthScoreData.php
+|   |-- BudgetVarianceData.php
+|   `-- TaxSummaryData.php
+|-- Events/
+|   |-- ReportGenerationRequested.php
+|   `-- ReportGenerationCompleted.php
+|-- Exceptions/
+|   |-- ReportGenerationException.php
+|   `-- FuturePeriodReportException.php
+|-- Models/
+|   |-- FinancialSnapshot.php
+|   |-- FinancialHealthScore.php
+|   |-- ExpenseTrend.php
+|   `-- TaxSummary.php
+|-- Repositories/
+|   |-- EloquentFinancialSnapshotRepository.php
+|   `-- EloquentHealthScoreRepository.php
+|-- Services/
+|   |-- ReportBuilderService.php
+|   |-- HealthScoreCalculationService.php
+|   |-- BudgetVarianceService.php
+|   |-- CashFlowForecastService.php
+|   |-- ExpenseAnomalyDetectionService.php
+|   |-- PdfExportService.php
+|   `-- ExcelExportService.php
+`-- Enums/
+    `-- ReportTypeEnum.php
+
+4.10 Notification Domain
+src/Domain/Notification/
+|-- Actions/
+|   |-- MarkNotificationReadAction.php
+|   |-- MarkAllNotificationsReadAction.php
+|   |-- DeleteNotificationAction.php
+|   |-- UpdateNotificationPreferencesAction.php
+|   |-- RegisterDeviceTokenAction.php
+|   `-- UnregisterDeviceTokenAction.php
+|-- Contracts/
+|   `-- NotificationRepositoryInterface.php
+|-- DTOs/
+|   |-- NotificationPreferencesData.php
+|   `-- DeviceTokenData.php
+|-- Events/
+|   `-- NotificationPreferencesUpdated.php
+|-- Exceptions/
+|   `-- NotificationNotFoundException.php
+|-- Models/
+|   `-- DeviceToken.php
+|-- Repositories/
+|   `-- EloquentNotificationRepository.php
+`-- Services/
+    |-- NotificationPreferenceService.php
+    `-- PushNotificationService.php
+
+4.11 Dashboard Domain
+src/Domain/Dashboard/
+|-- Actions/
+|   |-- GetDashboardSummaryAction.php
+|   |-- GetNetWorthHistoryAction.php
+|   |-- GetIncomeVsExpenseChartAction.php
+|   |-- GetGoalSummaryAction.php
+|   `-- GetBudgetAlertsAction.php
+|-- DTOs/
+|   |-- DashboardSummaryData.php
+|   |-- NetWorthHistoryData.php
+|   `-- BudgetAlertData.php
+`-- Services/
+    |-- DashboardAggregationService.php
+    `-- DashboardCacheService.php
+
+4.12 SharedKernel Domain
+src/Domain/SharedKernel/
+|-- Actions/
+|   |-- RequestDataExportAction.php
+|   |-- RequestAccountDeletionAction.php
+|   |-- CancelAccountDeletionAction.php
+|   |-- UpdateConsentAction.php
+|   `-- GenerateMonthlySnapshotAction.php
+|-- Contracts/
+|   |-- LedgerRepositoryInterface.php
+|   |-- AuditLogRepositoryInterface.php
+|   `-- TenantRepositoryInterface.php
+|-- DTOs/
+|   `-- AuditLogData.php
+|-- Events/
+|   |-- DomainEventInterface.php       # Base interface all events implement
+|   `-- AuditableEventInterface.php    # Marker interface for auditable events
+|-- Exceptions/
+|   |-- TenantNotFoundException.php
+|   |-- UnauthorizedException.php
+|   `-- DomainException.php            # Base domain exception
+|-- Models/
+|   |-- Tenant.php
+|   |-- LedgerAccount.php
+|   |-- LedgerEntry.php
+|   |-- AuditLog.php
+|   |-- ExchangeRate.php
+|   |-- ConsentRecord.php
+|   |-- DataDeletionRequest.php
+|   `-- EncryptionKeyVersion.php
+|-- Repositories/
+|   |-- EloquentLedgerRepository.php
+|   |-- EloquentAuditLogRepository.php
+|   `-- EloquentTenantRepository.php
+|-- Services/
+|   |-- LedgerService.php              # Double-entry accounting engine
+|   |-- AuditService.php               # Tamper-evident log writer
+|   |-- MoneyCalculatorService.php     # BCMath all arithmetic
+|   |-- CurrencyConversionService.php  # Exchange rate lookups
+|   |-- EncryptionService.php          # AES-256 field encryption
+|   |-- TenantResolverService.php      # Subdomain to tenant lookup
+|   `-- DataDeletionService.php        # DPDP erasure orchestration
+|-- ValueObjects/
+|   |-- Money.php                      # BCMath-backed monetary value object
+|   |-- Currency.php
+|   |-- Percentage.php
+|   |-- FinancialYear.php
+|   |-- TenantId.php
+|   |-- UserId.php
+|   `-- DateRange.php
+`-- Traits/
+    |-- BelongsToTenant.php            # Adds tenant_id scope to models
+    |-- BelongsToUser.php              # Adds user_id scope to models
+    |-- HasUlid.php                    # ULID generation on create
+    |-- HasSoftDeletes.php
+    |-- HasAuditLog.php                # Auto-logs changes to audit_logs
+    `-- HasLedgerEntry.php             # Auto-creates ledger entries on save
+
+
+5. HTTP Layer — Controllers, Requests, Resources
+
+5.1 Controllers
+All controllers are thin — maximum 5-7 lines per method. Every controller method: validates via FormRequest, creates DTO, calls one Action, returns API Resource. No business logic. No direct model access.
+
+app/Http/Controllers/
+|-- Api/
+|   |-- V1/
+|   |   |-- Auth/
+|   |   |   |-- AuthController.php          # login, logout, logoutAll, me
+|   |   |   |-- RegisterController.php      # register, resendVerification
+|   |   |   |-- VerificationController.php  # verify, resend
+|   |   |   |-- PasswordController.php      # forgot, reset
+|   |   |   |-- TwoFactorController.php     # enable, confirm, disable
+|   |   |   `-- DeviceController.php        # index, trust, revoke
+|   |   |-- Income/
+|   |   |   |-- SalarySourceController.php  # CRUD salary sources
+|   |   |   |-- IncomeEntryController.php   # CRUD income entries
+|   |   |   `-- IncomeSummaryController.php # summary, yearly totals
+|   |   |-- Expense/
+|   |   |   |-- ExpenseController.php       # CRUD expenses
+|   |   |   |-- ExpenseCategoryController.php
+|   |   |   |-- ExpenseBudgetController.php
+|   |   |   `-- ExpenseSummaryController.php
+|   |   |-- Savings/
+|   |   |   |-- SavingAccountController.php
+|   |   |   |-- SavingTransactionController.php # deposit, withdraw
+|   |   |   `-- SavingsSummaryController.php
+|   |   |-- EmergencyFund/
+|   |   |   |-- EmergencyFundController.php
+|   |   |   `-- EmergencyFundGapController.php
+|   |   |-- Goal/
+|   |   |   |-- FinancialGoalController.php
+|   |   |   |-- GoalContributionController.php
+|   |   |   |-- GoalProjectionController.php
+|   |   |   `-- GoalReorderController.php
+|   |   |-- Investment/
+|   |   |   |-- InvestmentController.php
+|   |   |   |-- InvestmentTransactionController.php
+|   |   |   |-- SipScheduleController.php
+|   |   |   `-- PortfolioSummaryController.php
+|   |   |-- Debt/
+|   |   |   |-- DebtController.php
+|   |   |   |-- DebtPaymentController.php
+|   |   |   |-- AmortizationScheduleController.php
+|   |   |   |-- PrepaymentController.php
+|   |   |   `-- ForeclosureController.php
+|   |   |-- Report/
+|   |   |   |-- ReportJobController.php      # async: POST returns job_id
+|   |   |   |-- ReportExportController.php   # PDF, Excel, CSV
+|   |   |   `-- HealthScoreController.php
+|   |   |-- Dashboard/
+|   |   |   `-- DashboardController.php      # summary, charts, alerts
+|   |   |-- Notification/
+|   |   |   |-- NotificationController.php
+|   |   |   |-- NotificationPreferenceController.php
+|   |   |   `-- DeviceTokenController.php
+|   |   |-- Profile/
+|   |   |   |-- ProfileController.php        # view, update
+|   |   |   |-- AvatarController.php
+|   |   |   |-- PasswordChangeController.php
+|   |   |   |-- ConsentController.php
+|   |   |   `-- DataExportController.php
+|   |   `-- Admin/
+|   |       |-- AdminUserController.php
+|   |       |-- AdminPlanController.php
+|   |       |-- AdminCategoryController.php
+|   |       |-- AdminInvestmentTypeController.php
+|   |       |-- AdminAuditLogController.php
+|   |       `-- AdminDashboardController.php
+|   `-- Lookup/
+|       `-- LookupController.php             # income-types, debt-types, goal-types
+`-- Web/
+    |-- Auth/
+    |   |-- LoginController.php
+    |   `-- RegisterController.php
+    `-- DashboardController.php
+
+5.2 Form Requests
+One FormRequest per form/endpoint. Each contains: authorize() (checks Policy) + rules() (all validation). No validation logic in controllers.
+
+app/Http/Requests/
+|-- Auth/
+|   |-- RegisterRequest.php
+|   |-- LoginRequest.php
+|   |-- ForgotPasswordRequest.php
+|   |-- ResetPasswordRequest.php
+|   |-- Verify2FARequest.php
+|   `-- ProfileSetupRequest.php
+|-- Income/
+|   |-- StoreSalarySourceRequest.php
+|   |-- UpdateSalarySourceRequest.php
+|   |-- StoreIncomeEntryRequest.php
+|   `-- UpdateIncomeEntryRequest.php
+|-- Expense/
+|   |-- StoreExpenseRequest.php
+|   |-- UpdateExpenseRequest.php
+|   |-- StoreExpenseCategoryRequest.php
+|   |-- UpdateExpenseCategoryRequest.php
+|   |-- StoreExpenseBudgetRequest.php
+|   `-- UpdateExpenseBudgetRequest.php
+|-- Savings/
+|   |-- StoreSavingAccountRequest.php
+|   |-- UpdateSavingAccountRequest.php
+|   |-- SavingDepositRequest.php
+|   `-- SavingWithdrawalRequest.php
+|-- EmergencyFund/
+|   |-- SetupEmergencyFundRequest.php
+|   |-- UpdateEmergencyFundRequest.php
+|   `-- EmergencyFundDepositRequest.php
+|-- Goal/
+|   |-- StoreFinancialGoalRequest.php
+|   |-- UpdateFinancialGoalRequest.php
+|   |-- StoreGoalContributionRequest.php
+|   `-- ReorderGoalsRequest.php
+|-- Investment/
+|   |-- StoreInvestmentRequest.php
+|   |-- UpdateInvestmentRequest.php
+|   |-- StoreInvestmentTransactionRequest.php
+|   |-- StoreSipScheduleRequest.php
+|   `-- UpdateSipScheduleRequest.php
+|-- Debt/
+|   |-- StoreDebtRequest.php
+|   |-- UpdateDebtRequest.php
+|   |-- StoreDebtPaymentRequest.php
+|   |-- PrepaymentRequest.php
+|   `-- UpdateInterestRateRequest.php
+|-- Report/
+|   `-- GenerateReportRequest.php
+|-- Profile/
+|   |-- UpdateProfileRequest.php
+|   |-- ChangePasswordRequest.php
+|   |-- DeleteAccountRequest.php
+|   `-- UpdateConsentRequest.php
+`-- Admin/
+    |-- StoreSubscriptionPlanRequest.php
+    `-- UpdateUserRoleRequest.php
+
+5.3 API Resources
+Transforms domain models/DTOs into JSON responses. Hides internal field names. Formats Money values as strings. Adds computed fields. Resource Collections wrap paginated results with standard meta.
+
+app/Http/Resources/
+|-- Auth/
+|   |-- UserResource.php                    # Full user object (profile, roles)
+|   |-- AuthTokenResource.php               # Token + user + expires_at
+|   `-- TrustedDeviceResource.php
+|-- Income/
+|   |-- SalarySourceResource.php
+|   |-- SalarySourceCollection.php
+|   |-- IncomeEntryResource.php
+|   |-- IncomeEntryCollection.php
+|   `-- IncomeSummaryResource.php
+|-- Expense/
+|   |-- ExpenseResource.php
+|   |-- ExpenseCollection.php
+|   |-- ExpenseCategoryResource.php
+|   |-- ExpenseBudgetResource.php
+|   `-- ExpenseSummaryResource.php
+|-- Savings/
+|   |-- SavingAccountResource.php
+|   |-- SavingAccountCollection.php
+|   |-- SavingTransactionResource.php
+|   `-- SavingsSummaryResource.php
+|-- EmergencyFund/
+|   |-- EmergencyFundResource.php
+|   `-- GapAnalysisResource.php
+|-- Goal/
+|   |-- FinancialGoalResource.php
+|   |-- FinancialGoalCollection.php
+|   |-- GoalContributionResource.php
+|   |-- GoalProjectionResource.php
+|   `-- GoalSummaryResource.php
+|-- Investment/
+|   |-- InvestmentResource.php
+|   |-- InvestmentCollection.php
+|   |-- InvestmentTransactionResource.php
+|   |-- SipScheduleResource.php
+|   `-- PortfolioSummaryResource.php
+|-- Debt/
+|   |-- DebtResource.php
+|   |-- DebtCollection.php
+|   |-- DebtPaymentResource.php
+|   |-- AmortizationScheduleResource.php
+|   `-- DebtSummaryResource.php
+|-- Report/
+|   |-- ReportJobResource.php
+|   |-- MonthlyReportResource.php
+|   `-- HealthScoreResource.php
+|-- Dashboard/
+|   |-- DashboardSummaryResource.php
+|   `-- NetWorthHistoryResource.php
+|-- Notification/
+|   |-- NotificationResource.php
+|   `-- NotificationCollection.php
+`-- Shared/
+    |-- PaginatedCollection.php             # Base paginated resource
+    `-- ErrorResource.php
+
+6. Middleware
+app/Http/Middleware/
+|-- Auth/
+|   |-- Authenticate.php                    # Sanctum token validation
+|   |-- RedirectIfAuthenticated.php
+|   `-- EnsureEmailIsVerified.php
+|-- Tenant/
+|   |-- ResolveTenant.php                   # Subdomain -> Tenant lookup -> bind to request
+|   `-- EnsureTenantIsActive.php
+|-- Security/
+|   |-- IdempotencyMiddleware.php           # Check/store Idempotency-Key header
+|   |-- RateLimitByTier.php                 # Tiered rate limits by route group
+|   |-- SecurityHeaders.php                 # X-Frame-Options, CSP, etc.
+|   |-- SanitizeInput.php                   # Strip unexpected input characters
+|   `-- VerifySignedUrl.php                 # For email verification links
+|-- Privacy/
+|   |-- RequireConsent.php                  # DPDP consent check on data routes
+|   `-- NoCacheFinancialData.php            # Cache-Control: no-store on financial APIs
+|-- Admin/
+|   |-- RequireAdminRole.php
+|   `-- AdminIpAllowlist.php                # IP allowlist for admin endpoints
+`-- Logging/
+    `-- StructuredRequestLogger.php         # JSON request/response logging with X-Request-ID
+
+6.1 Middleware Responsibilities
+File / Class
+Responsibility
+ResolveTenant.php
+Reads subdomain from Host header. Looks up tenant in cache then DB. Binds Tenant to request. Returns 404 if tenant not found or inactive.
+IdempotencyMiddleware.php
+Reads Idempotency-Key header. Checks idempotency_keys table. If found and valid: return cached response. If missing: return 400 on mutation endpoints.
+RateLimitByTier.php
+Applies different rate limits per route group: Auth=5/min, Financial writes=30/min, Reports=3/min, Bulk=10/hr. Uses Redis for counters.
+SecurityHeaders.php
+Adds: X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy, Permissions-Policy. Applied to all responses.
+NoCacheFinancialData.php
+Adds Cache-Control: no-store, no-cache, must-revalidate to all financial data API responses. Prevents browser and CDN caching.
+RequireConsent.php
+Checks consent_records for data_processing consent before allowing financial data routes. Returns 403 with consent_required message if withdrawn.
+AdminIpAllowlist.php
+Reads ADMIN_ALLOWED_IPS from config. Returns 403 if request IP not in allowlist. Applied to all /api/v1/admin/* routes.
+StructuredRequestLogger.php
+Logs every request as structured JSON: {request_id, user_id, tenant_id, method, path, status, duration_ms}. Masks PII fields (email, phone, amounts).
+
+6.2 Middleware Stack Order
+ORDER
+Global (all requests): StructuredRequestLogger -> SecurityHeaders -> NoCacheFinancialData
+API routes: ResolveTenant -> EnsureTenantIsActive -> Authenticate -> EnsureEmailIsVerified
+Financial mutation routes: + IdempotencyMiddleware -> RateLimitByTier -> RequireConsent
+Admin routes: + RequireAdminRole -> AdminIpAllowlist
+Auth routes only: + RateLimitByTier (5/min) [no Authenticate middleware]
+
+7. Policies
+One Policy per Domain Model. Every FormRequest authorize() method delegates to its Policy. Policies enforce both authentication (resource ownership) and authorization (role/permission checks). No inline auth checks in controllers.
+
+app/Policies/
+|-- SalarySourcePolicy.php
+|-- IncomeEntryPolicy.php
+|-- ExpensePolicy.php
+|-- ExpenseCategoryPolicy.php
+|-- ExpenseBudgetPolicy.php
+|-- SavingAccountPolicy.php
+|-- SavingTransactionPolicy.php
+|-- EmergencyFundPolicy.php
+|-- FinancialGoalPolicy.php
+|-- GoalContributionPolicy.php
+|-- InvestmentPolicy.php
+|-- InvestmentTransactionPolicy.php
+|-- SipSchedulePolicy.php
+|-- DebtPolicy.php
+|-- DebtPaymentPolicy.php
+|-- NotificationPolicy.php
+|-- UserPolicy.php              # Admin: manage all users
+`-- AdminPolicy.php             # Admin-only operations gate
+
+7.1 Key Policy Rules
+File / Class
+Responsibility
+SalarySourcePolicy
+view/create: authenticated user. update/delete: user_id === auth user. viewAny: own sources only.
+ExpensePolicy
+view/update/delete: expense.user_id === auth.id. create: any authenticated user. Cross-user access returns 403.
+ExpenseCategoryPolicy
+view: auth user (own + system). update/delete: own categories only. delete: reject if is_system=true.
+FinancialGoalPolicy
+All methods: goal.user_id === auth.id. contribute: goal must be status=active (not paused/cancelled).
+InvestmentPolicy
+view/update/delete: investment.user_id === auth.id. Explicit check prevents BOLA via ULID guessing.
+DebtPolicy
+All CRUD: debt.user_id === auth.id. recordPayment: debt.status !== closed (DebtAlreadyClosedException).
+UserPolicy
+viewAny/update/delete: only admin role. update: cannot demote last admin. delete: cannot delete own account via admin panel.
+AdminPolicy
+Gate for admin panel access. Checks user has admin role AND request IP is in admin allowlist.
+
+8. Jobs (Queue Workers)
+Jobs handle all async, long-running, and scheduled tasks. They run on dedicated queue workers (Laravel Horizon). Never run jobs synchronously in the request path — always dispatch to queue.
+
+app/Jobs/
+|-- Income/
+|   `-- SyncRecurringIncomeJob.php         # Monthly: auto-create recurring income entries
+|-- Report/
+|   |-- GenerateMonthlyReportJob.php        # Async report generation (queued)
+|   |-- GenerateQuarterlyReportJob.php
+|   |-- GenerateYearlyReportJob.php
+|   |-- GenerateTaxReportJob.php
+|   |-- ExportReportPdfJob.php
+|   `-- ExportReportExcelJob.php
+|-- Investment/
+|   |-- ComputeXirrForInvestmentJob.php    # Nightly: Newton-Raphson XIRR per investment
+|   |-- ComputeCagrForInvestmentJob.php
+|   `-- ExecuteSipInstallmentJob.php        # Daily: process due SIP schedules
+|-- Snapshot/
+|   |-- GenerateMonthlySnapshotJob.php      # 1st of month: capture all user balances
+|   `-- BackfillSnapshotsJob.php            # Admin: regenerate missing snapshots
+|-- Analytics/
+|   |-- ComputeExpenseTrendsJob.php         # Nightly: rolling avg + anomaly detection
+|   `-- ComputeHealthScoresJob.php          # Nightly: health score for all users
+|-- Debt/
+|   |-- SendEmiReminderJob.php              # 3 days before: EMI due reminder
+|   `-- RegenerateAmortizationScheduleJob.php # After prepayment or rate change
+|-- Archive/
+|   |-- ArchiveOldTransactionsJob.php       # Monthly: move data to S3 Parquet
+|   `-- PurgeExpiredSoftDeletesJob.php      # Daily: hard-delete 90-day-old soft deletes
+|-- Compliance/
+|   |-- ProcessDataDeletionRequestJob.php   # DPDP: execute scheduled user deletion
+|   `-- ExportUserDataJob.php               # DPDP: generate data export ZIP
+|-- File/
+|   `-- ScanUploadForMalwareJob.php         # After upload: ClamAV/AWS scan
+|-- Notification/
+|   `-- SendPushNotificationJob.php         # FCM/APNs push dispatch
+`-- Exchange/
+    `-- UpdateExchangeRatesJob.php           # Daily: fetch latest RBI/Fixer rates
+
+8.1 Critical Job Descriptions
+File / Class
+Responsibility
+GenerateMonthlyReportJob
+Dispatched by GenerateMonthlyReportAction. Runs on report queue. Generates report, stores in Redis/S3, marks job complete. Controller polls GET /jobs/{id}.
+ComputeXirrForInvestmentJob
+Dispatched nightly for every active investment with transactions. Reads all investment_transactions ordered by date. Runs Newton-Raphson. Updates investments.xirr_percentage.
+GenerateMonthlySnapshotJob
+Dispatched 1st of every month at 00:05 IST. Aggregates all user balances. Inserts into financial_snapshots. Powers dashboard net worth chart.
+ProcessDataDeletionRequestJob
+Dispatched 30 days after deletion request. Soft-deletes all user data. Tags S3 objects. Updates data_deletion_requests.completed_at. Sends confirmation email.
+ArchiveOldTransactionsJob
+Monthly. Exports transactions > 24 months old to S3 Parquet. Drops MySQL partition. Updates archived_transaction_meta index table.
+ExecuteSipInstallmentJob
+Daily at 08:00 IST. Reads sip_schedules WHERE next_due_date = today AND is_active=1. Creates investment_transaction for each. Updates next_due_date.
+PurgeExpiredSoftDeletesJob
+Daily at 02:00 IST. Hard-deletes records WHERE deleted_at < NOW()-90days. Excludes: ledger_entries, consent_records, audit_logs (permanent).
+ScanUploadForMalwareJob
+Dispatched immediately after file upload. Calls ClamAV socket or AWS GuardDuty API. Sets file_uploads.scan_status = clean|infected|error.
+
+QUEUE
+Queue configuration: 4 dedicated queues with separate worker pools.
+  default: General async tasks (notifications, cache invalidation)
+  reports: Report generation jobs (memory-intensive, longer timeout)
+  nightly: XIRR, snapshots, health scores, trends (large batch jobs)
+  critical: Data deletion, compliance exports (highest priority, monitored)
+
+9. Events & Listeners
+Domain Events carry state changes. Listeners handle side effects. This decouples the core domain logic (did this happen?) from consequences (what do we do about it?). New behavior = new Listener, zero changes to domain code.
+
+9.1 Event to Listener Mapping
+Event
+Listeners (in order)
+UserRegistered
+SendWelcomeEmailListener, CreateDefaultExpenseCategoriesListener, RecordAuditLogListener, RecordConsentListener
+UserEmailVerified
+SendEmailVerifiedNotificationListener, RecordAuditLogListener
+UserLoggedIn
+UpdateLastLoginAtListener, RecordLoginEventListener, InvalidateDashboardCacheListener
+NewDeviceDetected
+SendNewDeviceAlertEmailListener, RecordAuditLogListener
+LoginFailed
+IncrementFailedLoginCountListener, LockAccountIfThresholdReachedListener
+PasswordChanged
+InvalidateAllUserTokensListener, SendPasswordChangedEmailListener, RecordAuditLogListener
+IncomeEntryRecorded
+WriteLedgerEntryListener, InvalidateDashboardCacheListener, RecordAuditLogListener
+IncomeEntryDeleted
+ReverseLedgerEntryListener, InvalidateDashboardCacheListener
+ExpenseCreated
+WriteLedgerEntryListener, CheckBudgetThresholdListener, InvalidateDashboardCacheListener, RecordAuditLogListener
+BudgetWarningThresholdReached
+SendBudgetWarningNotificationListener
+BudgetExceeded
+SendBudgetExceededNotificationListener, RecordAuditLogListener
+SavingDepositMade
+UpdateSavingAccountBalanceListener, WriteLedgerEntryListener, CheckSavingsMilestoneListener, InvalidateDashboardCacheListener
+SavingMilestoneReached
+SendSavingsMilestoneNotificationListener
+SavingGoalCompleted
+SendSavingsGoalCompletedEmailListener
+EmergencyFundMilestoneReached
+SendEmergencyFundMilestoneNotificationListener
+GoalCreated
+CreateGoalMilestonesListener, RunGoalProjectionListener, RecordAuditLogListener
+GoalContributionAdded
+UpdateGoalCurrentAmountListener, WriteLedgerEntryListener, CheckGoalMilestoneListener, RecordAuditLogListener
+GoalMilestoneReached
+SendGoalMilestoneNotificationListener
+GoalCompleted
+SendGoalCompletedEmailListener, RecordAuditLogListener
+GoalBehindSchedule
+SendGoalBehindScheduleNotificationListener
+InvestmentAdded
+WriteLedgerEntryListener, DispatchXirrComputationListener, RecordAuditLogListener
+InvestmentTransactionRecorded
+UpdateInvestmentAmountAndUnitsListener, WriteLedgerEntryListener, DispatchXirrComputationListener
+SipInstallmentDue
+SendSipReminderNotificationListener
+InvestmentMaturing
+SendInvestmentMaturityAlertListener
+DebtAdded
+DispatchAmortizationGenerationListener, RecordAuditLogListener
+DebtPaymentRecorded
+UpdateDebtOutstandingBalanceListener, UpdateAmortizationScheduleListener, WriteLedgerEntryListener, RecordAuditLogListener
+DebtPrepaymentMade
+RegenerateAmortizationScheduleListener, UpdateDebtOutstandingBalanceListener
+DebtEmiDueSoon
+SendEmiReminderNotificationListener
+DebtFullyRepaid
+CloseDebtListener, SendDebtRepaidEmailListener, RecordAuditLogListener
+ReportGenerationCompleted
+SendReportReadyNotificationListener, StoreReportInS3Listener
+
+9.2 Listeners File Tree
+app/Listeners/
+|-- Auth/
+|   |-- SendWelcomeEmailListener.php
+|   |-- CreateDefaultExpenseCategoriesListener.php
+|   |-- UpdateLastLoginAtListener.php
+|   |-- RecordLoginEventListener.php
+|   |-- InvalidateAllUserTokensListener.php
+|   |-- IncrementFailedLoginCountListener.php
+|   |-- LockAccountIfThresholdReachedListener.php
+|   `-- SendNewDeviceAlertEmailListener.php
+|-- Finance/
+|   |-- WriteLedgerEntryListener.php          # Used by ALL money-movement events
+|   |-- ReverseLedgerEntryListener.php
+|   `-- InvalidateDashboardCacheListener.php  # Used by ALL balance-change events
+|-- Expense/
+|   |-- CheckBudgetThresholdListener.php      # Checks 80%+ and dispatches budget events
+|   |-- SendBudgetWarningNotificationListener.php
+|   `-- SendBudgetExceededNotificationListener.php
+|-- Savings/
+|   |-- UpdateSavingAccountBalanceListener.php
+|   |-- CheckSavingsMilestoneListener.php
+|   |-- SendSavingsMilestoneNotificationListener.php
+|   `-- SendSavingsGoalCompletedEmailListener.php
+|-- Goal/
+|   |-- CreateGoalMilestonesListener.php
+|   |-- RunGoalProjectionListener.php
+|   |-- UpdateGoalCurrentAmountListener.php
+|   |-- CheckGoalMilestoneListener.php
+|   |-- SendGoalMilestoneNotificationListener.php
+|   |-- SendGoalCompletedEmailListener.php
+|   `-- SendGoalBehindScheduleNotificationListener.php
+|-- Investment/
+|   |-- UpdateInvestmentAmountAndUnitsListener.php
+|   |-- DispatchXirrComputationListener.php
+|   |-- SendSipReminderNotificationListener.php
+|   `-- SendInvestmentMaturityAlertListener.php
+|-- Debt/
+|   |-- DispatchAmortizationGenerationListener.php
+|   |-- UpdateDebtOutstandingBalanceListener.php
+|   |-- UpdateAmortizationScheduleListener.php
+|   |-- RegenerateAmortizationScheduleListener.php
+|   |-- CloseDebtListener.php
+|   |-- SendEmiReminderNotificationListener.php
+|   `-- SendDebtRepaidEmailListener.php
+|-- Report/
+|   |-- SendReportReadyNotificationListener.php
+|   `-- StoreReportInS3Listener.php
+|-- Compliance/
+|   |-- RecordConsentListener.php
+|   `-- RecordAuditLogListener.php            # Generic: listens to ALL auditable events
+`-- Notification/
+    `-- SendPushNotificationListener.php       # Dispatches FCM/APNs via queue
+
+10. Notifications
+Laravel Notification classes deliver alerts through multiple channels. Each Notification decides its channels based on user preferences (NotificationPreferenceService). Push notifications use the broadcast channel via FCM/APNs.
+
+app/Notifications/
+|-- Auth/
+|   |-- WelcomeNotification.php
+|   |-- EmailVerificationNotification.php
+|   |-- NewDeviceLoginNotification.php
+|   |-- AccountLockedNotification.php
+|   |-- PasswordChangedNotification.php
+|   |-- TwoFactorEnabledNotification.php
+|   `-- TwoFactorDisabledNotification.php
+|-- Budget/
+|   |-- BudgetWarningNotification.php         # 80% threshold
+|   `-- BudgetExceededNotification.php        # 100%+ threshold
+|-- Savings/
+|   |-- SavingsMilestoneNotification.php
+|   `-- SavingsGoalCompletedNotification.php
+|-- EmergencyFund/
+|   `-- EmergencyFundMilestoneNotification.php
+|-- Goal/
+|   |-- GoalMilestoneNotification.php
+|   |-- GoalCompletedNotification.php
+|   `-- GoalBehindScheduleNotification.php
+|-- Investment/
+|   |-- SipReminderNotification.php
+|   |-- InvestmentMaturityAlertNotification.php
+|   `-- XirrUpdatedNotification.php
+|-- Debt/
+|   |-- EmiReminderNotification.php
+|   `-- DebtFullyRepaidNotification.php
+|-- Report/
+|   |-- ReportReadyNotification.php
+|   `-- ReportEmailedNotification.php         # When async report emailed
+|-- Income/
+|   `-- IncomeReminderNotification.php        # 35-day no income alert
+|-- Compliance/
+|   |-- DataExportReadyNotification.php
+|   `-- AccountDeletionScheduledNotification.php
+`-- General/
+    `-- TestNotification.php                   # Dev only: notification testing
+
+10.1 Channel Configuration per Notification
+Notification Class
+Channel Description
+Laravel via() channels
+WelcomeNotification
+Email + In-App
+mail + database
+EmailVerificationNotification
+Email only
+mail
+NewDeviceLoginNotification
+Email + In-App
+mail + database
+BudgetWarningNotification
+In-App + Push
+database + broadcast
+BudgetExceededNotification
+Email + In-App + Push
+mail + database + broadcast
+SavingsMilestoneNotification
+In-App + Push
+database + broadcast
+SavingsGoalCompletedNotification
+Email + In-App
+mail + database
+GoalMilestoneNotification
+In-App + Push
+database + broadcast
+GoalCompletedNotification
+Email + In-App
+mail + database
+GoalBehindScheduleNotification
+Email + In-App
+mail + database
+EmiReminderNotification
+Email + Push
+mail + broadcast
+DebtFullyRepaidNotification
+Email + In-App
+mail + database
+SipReminderNotification
+Push + In-App
+broadcast + database
+InvestmentMaturityAlertNotification
+Email + Push
+mail + broadcast
+ReportReadyNotification
+Email + In-App
+mail + database
+DataExportReadyNotification
+Email only
+mail
+AccountDeletionScheduledNotification
+Email only
+mail
+
+11. Models Registry
+Every Eloquent model lives in its domain's Models/ folder. Models contain: relationships, casts, scopes, fillable/guarded, and trait declarations ONLY. Zero business logic inside models — all logic in Services and Actions.
+
+RULE
+Model rules: No business logic. No complex queries. No HTTP/Request references.
+All money columns cast to Money value object via custom Eloquent cast.
+All models with financial data have: HasLedgerEntry trait (auto-creates ledger entries on save).
+All user-data models have: BelongsToTenant trait (auto-injects tenant_id scope on all queries).
+
+Model
+Domain
+Key Relationships
+Traits
+User
+Auth/SharedKernel
+hasMany: SalarySource,Expense,SavingAccount,FinancialGoal,Investment,Debt | hasOne: EmergencyFund | belongsTo: Tenant,SubscriptionPlan
+HasRoles,HasApiTokens,MustVerifyEmail,BelongsToTenant,HasUlid,HasAuditLog,SoftDeletes
+SalarySource
+Income
+hasMany: IncomeEntry | belongsTo: User,IncomeSourceType
+BelongsToUser,BelongsToTenant,HasUlid,HasAuditLog,SoftDeletes
+IncomeEntry
+Income
+belongsTo: SalarySource,User | morphOne: LedgerEntry
+BelongsToUser,BelongsToTenant,HasUlid,HasLedgerEntry,SoftDeletes
+ExpenseCategory
+Expense
+hasMany: Expense,ExpenseBudget | belongsTo: User (nullable)
+HasUlid
+Expense
+Expense
+belongsTo: ExpenseCategory,User | morphOne: LedgerEntry
+BelongsToUser,BelongsToTenant,HasUlid,HasLedgerEntry,SoftDeletes
+ExpenseBudget
+Expense
+belongsTo: ExpenseCategory,User
+BelongsToUser,BelongsToTenant
+SavingAccount
+Savings
+hasMany: SavingTransaction | belongsTo: User
+BelongsToUser,BelongsToTenant,HasUlid,HasAuditLog,SoftDeletes
+SavingTransaction
+Savings
+belongsTo: SavingAccount,User | morphOne: LedgerEntry
+BelongsToUser,HasUlid,HasLedgerEntry,SoftDeletes
+EmergencyFund
+EmergencyFund
+belongsTo: User (1:1)
+BelongsToUser
+FinancialGoal
+Goal
+hasMany: GoalContribution,GoalProjection,GoalMilestone | belongsTo: User,GoalType
+BelongsToUser,BelongsToTenant,HasUlid,HasAuditLog,SoftDeletes
+GoalContribution
+Goal
+belongsTo: FinancialGoal,User | morphOne: LedgerEntry
+BelongsToUser,HasUlid,HasLedgerEntry,SoftDeletes
+Investment
+Investment
+hasMany: InvestmentTransaction,SipSchedule | belongsTo: User,InvestmentType
+BelongsToUser,BelongsToTenant,HasUlid,HasAuditLog,SoftDeletes
+InvestmentTransaction
+Investment
+belongsTo: Investment,User | morphOne: LedgerEntry
+BelongsToUser,HasUlid,HasLedgerEntry,SoftDeletes
+SipSchedule
+Investment
+belongsTo: Investment,User
+BelongsToUser,HasUlid
+Debt
+Debt
+hasMany: DebtPayment,DebtAmortizationSchedule,DebtRateChange | belongsTo: User,DebtType
+BelongsToUser,BelongsToTenant,HasUlid,HasAuditLog,SoftDeletes
+DebtPayment
+Debt
+belongsTo: Debt,User | morphOne: LedgerEntry
+BelongsToUser,HasUlid,HasLedgerEntry
+DebtAmortizationSchedule
+Debt
+belongsTo: Debt
+
+LedgerAccount
+SharedKernel
+hasMany: LedgerEntry | belongsTo: User
+BelongsToUser,BelongsToTenant
+LedgerEntry
+SharedKernel
+belongsTo: LedgerAccount,User | morphTo: transaction (polymorphic)
+BelongsToUser,BelongsToTenant — APPEND-ONLY
+AuditLog
+SharedKernel
+belongsTo: User (nullable) | morphTo: auditable (polymorphic)
+INSERT-ONLY. No SoftDeletes.
+Tenant
+SharedKernel
+hasMany: User | belongsTo: SubscriptionPlan
+
+FinancialSnapshot
+Report
+belongsTo: User
+BelongsToUser,BelongsToTenant — READ MODEL
+FinancialHealthScore
+Report
+belongsTo: User
+BelongsToUser — READ MODEL
+ExpenseTrend
+Report
+belongsTo: User,ExpenseCategory
+BelongsToUser — READ MODEL
+TrustedDevice
+Auth
+belongsTo: User
+BelongsToUser
+LoginEvent
+Auth
+belongsTo: User
+BelongsToUser
+DeviceToken
+Notification
+belongsTo: User
+BelongsToUser
+ExchangeRate
+SharedKernel
+no relationships
+
+ConsentRecord
+SharedKernel
+belongsTo: User
+BelongsToUser — PERMANENT
+
+12. Service Providers & Console Commands
+
+12.1 Service Providers
+app/Providers/
+|-- AppServiceProvider.php              # Singleton bindings, macro registrations
+|-- AuthServiceProvider.php            # Policy -> Model mappings
+|-- EventServiceProvider.php           # Event -> Listener mappings (all 30+ events)
+|-- RouteServiceProvider.php           # API route binding, rate limit definitions
+|-- RepositoryServiceProvider.php      # Interface -> Implementation bindings
+|-- DomainServiceProvider.php          # Domain Service singleton registrations
+`-- TelescopeServiceProvider.php       # Laravel Telescope (staging only)
+
+KEY
+RepositoryServiceProvider.php is critical — it binds every Interface -> Implementation.
+Example: $this->app->bind(GoalRepositoryInterface::class, EloquentGoalRepository::class)
+This allows swapping Eloquent for any other ORM/storage without touching domain code.
+DomainServiceProvider registers Services as singletons (stateless, safe to share across requests).
+
+12.2 Artisan Commands
+app/Console/
+|-- Commands/
+|   |-- Finance/
+|   |   |-- GenerateMonthlySnapshotsCommand.php    # Runs GenerateMonthlySnapshotJob
+|   |   |-- ComputeXirrAllInvestmentsCommand.php   # Batch XIRR computation
+|   |   |-- ComputeHealthScoresCommand.php
+|   |   `-- UpdateExpenseTrendsCommand.php
+|   |-- Maintenance/
+|   |   |-- ArchiveOldTransactionsCommand.php
+|   |   |-- PurgeSoftDeletesCommand.php
+|   |   |-- SendEmiRemindersCommand.php
+|   |   `-- ProcessPendingDataDeletionsCommand.php
+|   |-- Exchange/
+|   |   `-- UpdateExchangeRatesCommand.php
+|   |-- Sip/
+|   |   `-- ExecuteDueSipsCommand.php
+|   `-- Admin/
+|       |-- BackfillSnapshotsCommand.php
+|       `-- RecomputeGoalProjectionsCommand.php
+`-- Kernel.php                                     # Cron schedule definitions
+
+12.3 Cron Schedule
+Time
+Command
+Notes
+Daily 00:05 IST
+GenerateMonthlySnapshotsCommand
+First of every month only
+Daily 02:00 IST
+PurgeSoftDeletesCommand
+Delete 90+ day old soft-deleted records
+Daily 02:30 IST
+ArchiveOldTransactionsCommand
+First of month only: move to S3
+Daily 03:00 IST
+ComputeXirrAllInvestmentsCommand
+Batch XIRR for all active investments
+Daily 03:30 IST
+ComputeHealthScoresCommand
+Recompute all user health scores
+Daily 04:00 IST
+UpdateExpenseTrendsCommand
+Rolling avg + anomaly flags
+Daily 07:00 IST
+UpdateExchangeRatesCommand
+Fetch RBI/Fixer rates for today
+Daily 08:00 IST
+ExecuteDueSipsCommand
+Process all SIPs due today
+Daily 08:30 IST
+SendEmiRemindersCommand
+EMIs due in 3 days
+Daily 10:00 IST
+ProcessPendingDataDeletionsCommand
+Execute scheduled DPDP deletions
+
+13. Test Structure
+Tests mirror the domain structure. Architecture tests enforce DDD boundaries (PHPStan + custom rules). Unit tests cover domain services in isolation. Feature tests cover full API request-response cycle.
+
+tests/
+|-- Unit/
+|   |-- SharedKernel/
+|   |   |-- MoneyTest.php                   # BCMath arithmetic, equality, immutability
+|   |   |-- FinancialYearTest.php           # April-March boundary tests
+|   |   `-- LedgerServiceTest.php           # Double-entry balance verification
+|   |-- Income/
+|   |   `-- IncomeCalculationServiceTest.php
+|   |-- Goal/
+|   |   |-- GoalProjectionServiceTest.php   # TVM calculations with inflation
+|   |   `-- TimeValueOfMoneyServiceTest.php
+|   |-- Investment/
+|   |   |-- XirrCalculationServiceTest.php  # XIRR against known SIP scenarios
+|   |   `-- CagrCalculationServiceTest.php
+|   |-- Debt/
+|   |   |-- AmortizationServiceTest.php     # Schedule generation accuracy
+|   |   `-- PrepaymentImpactServiceTest.php
+|   |-- Report/
+|   |   `-- HealthScoreCalculationServiceTest.php
+|   `-- Expense/
+|       `-- BudgetCheckServiceTest.php
+|-- Feature/
+|   |-- Auth/
+|   |   |-- RegisterTest.php
+|   |   |-- LoginTest.php
+|   |   |-- TwoFactorTest.php
+|   |   `-- PasswordResetTest.php
+|   |-- Income/
+|   |   |-- SalarySourceTest.php            # Full API CRUD with BOLA checks
+|   |   `-- IncomeEntryTest.php
+|   |-- Expense/
+|   |   |-- ExpenseTest.php
+|   |   `-- BudgetTest.php
+|   |-- Savings/
+|   |   `-- SavingAccountTest.php           # Deposit, withdraw, milestone triggers
+|   |-- Goal/
+|   |   `-- GoalContributionTest.php
+|   |-- Investment/
+|   |   `-- SipScheduleTest.php
+|   |-- Debt/
+|   |   `-- DebtPaymentTest.php
+|   |-- Dashboard/
+|   |   `-- DashboardSummaryTest.php        # Cache hit, cache miss, empty state
+|   |-- Report/
+|   |   `-- MonthlyReportJobTest.php
+|   `-- Policy/
+|       `-- CrossUserAccessTest.php          # BOLA: every endpoint tested for cross-user access
+|-- Integration/
+|   |-- LedgerIntegrityTest.php             # Every money movement balanced in ledger
+|   `-- SnapshotGenerationTest.php
+`-- Architecture/
+    |-- DomainLayerHasNoDependencyOnHttpTest.php   # Domain has no Laravel HTTP imports
+    `-- ControllersAreSlimTest.php                 # Controllers max 7 lines per method
+
+COVERAGE
+Target: > 90% line coverage on Domain Services and Actions.
+Every API endpoint has at least: happy path test + cross-user BOLA test + validation error test.
+Architecture tests run in CI: detect if Domain layer accidentally imports app/ or Http/ classes.
+LedgerIntegrityTest: after every test that creates money movement, assert ledger debits === credits.
+
+14. Routes Organization
+
+14.1 API Route Groups
+Route Group
+Middleware Stack
+Endpoints Covered
+/api/v1/auth
+Public (rate: 5/min)
+register, login, forgot-password, reset-password, email/verify, email/resend
+/api/v1/auth (auth)
+Auth required
+logout, logout-all, me, 2fa/enable, 2fa/confirm, 2fa/disable, devices
+/api/v1/income
+Auth + Idempotency
+sources CRUD, entries CRUD, summary
+/api/v1/expenses
+Auth + Idempotency
+CRUD, categories CRUD, budgets CRUD, summary
+/api/v1/savings
+Auth + Idempotency
+accounts CRUD, deposit, withdraw, transactions, summary
+/api/v1/emergency-fund
+Auth + Idempotency
+setup, update, deposit, gap-analysis
+/api/v1/goals
+Auth + Idempotency
+CRUD, contributions CRUD, projection, reorder
+/api/v1/investments
+Auth + Idempotency
+CRUD, transactions, sip-schedules, portfolio-summary
+/api/v1/debts
+Auth + Idempotency
+CRUD, payments, schedule, prepayment, foreclosure, payoff-strategy
+/api/v1/reports
+Auth (rate: 3/min)
+jobs POST, jobs/{id} GET, export/pdf, export/excel, export/csv, health-score
+/api/v1/dashboard
+Auth + Cache
+summary, net-worth-history, income-vs-expense, goal-summary, budget-alerts
+/api/v1/notifications
+Auth
+list, {id}/read, read-all, {id} DELETE, preferences, device-tokens
+/api/v1/me
+Auth
+profile, avatar, password, consents, data-export, deletion request/cancel
+/api/v1/lookup
+Auth (cached 1hr)
+income-types, debt-types, goal-types, saving-types, payment-modes
+/api/v1/admin
+Admin + IP allowlist
+users CRUD, plans CRUD, categories, investment-types, audit-logs, stats
+
+14.2 Route File Responsibilities
+File / Class
+Responsibility
+routes/api.php
+All /api/v1/* routes. Versioned prefix. Middleware groups applied per section.
+routes/auth.php
+Auth-specific routes included from api.php. Keeps auth routes in one place.
+routes/admin.php
+Admin-only routes. Included from api.php behind RequireAdminRole + AdminIpAllowlist.
+routes/web.php
+Blade/web routes for login, register pages. SPA fallback route if applicable.
+routes/channels.php
+Broadcast channels authorization (Laravel Echo + Pusher/Soketi).
+
+VER
+API versioning: all routes prefixed with /api/v1/. When v2 launches, /api/v2/ routes in a new file.
+v1 routes remain fully functional. No breaking changes to v1 when v2 is introduced.
+Controller namespace: App\Http\Controllers\Api\V1\{Domain}\{Controller}
+
+15. Dependencies & Configuration
+
+15.1 composer.json Dependencies
+Package
+Version
+Purpose
+laravel/framework
+^12.0
+Core Laravel framework
+laravel/sanctum
+^4.0
+API token authentication
+laravel/fortify
+^1.0
+Authentication scaffolding (register, login, 2FA)
+laravel/horizon
+^5.0
+Queue dashboard and worker management
+laravel/scout
+^10.0
+Full-text search integration (Meilisearch)
+laravel/telescope
+^5.0
+Debugging (staging only — dev dependency)
+spatie/laravel-permission
+^6.0
+RBAC roles and permissions management
+spatie/laravel-audit-log
+^3.0
+Model change auditing foundation
+maatwebsite/excel
+^3.1
+Excel and CSV export (Laravel Excel)
+barryvdh/laravel-dompdf
+^3.0
+PDF generation from Blade templates
+predis/predis
+^2.0
+Redis client for cache, sessions, queues
+meilisearch/meilisearch-php
+*
+Meilisearch client for Laravel Scout
+spatie/laravel-data
+^4.0
+Typed DTO objects (Data Transfer Objects)
+brick/math
+*
+Arbitrary-precision arithmetic (BCMath alternative)
+league/flysystem-aws-s3-v3
+^3.0
+S3 file storage for exports and uploads
+pusher/pusher-php-server
+^7.0
+Push notifications via Pusher/Soketi
+sentry/sentry-laravel
+^4.0
+Error tracking and performance monitoring
+bensampo/laravel-enum
+^6.0
+Enhanced PHP enum support
+nunomaduro/larastan
+^2.0
+PHPStan for Laravel (static analysis)
+pestphp/pest
+^2.0
+Elegant testing framework (built on PHPUnit)
+pestphp/pest-plugin-laravel
+*
+Pest + Laravel helpers
+fakerphp/faker
+*
+Test data generation
+
+15.2 Configuration Files
+File / Class
+Responsibility
+config/app.php
+App name, timezone (Asia/Kolkata), locale (en_IN), encryption key
+config/auth.php
+Guards (sanctum for API), password broker, provider (users table)
+config/database.php
+MySQL primary + read replica connections, Redis configuration
+config/cache.php
+Redis as default driver. Cache key prefix per environment.
+config/queue.php
+Redis queue driver. 4 queues: default, reports, nightly, critical.
+config/filesystems.php
+S3 as default disk. Local disk for temp files. Signed URL config.
+config/mail.php
+SMTP/Mailgun/SES configuration. From address and name.
+config/sanctum.php
+Token expiry: 30 days app, 8 hours web. Stateful domains list.
+config/logging.php
+JSON log format. Separate channels: daily, slack, sentry.
+config/horizon.php
+Queue worker config: 4 queues, worker counts per queue, timeouts.
+config/permission.php
+Spatie permission cache duration. Table names.
+config/ffp.php
+Custom app config: admin_allowed_ips, dpdp_deletion_days=30, budget_warning_pct=80, sip_reminder_days=3, snapshot_retention_years=10
+
+16. Naming Conventions
+Consistent naming is a DDD requirement — it enables ubiquitous language across code, docs, and conversations. Every team member should be able to guess a class name from its description and vice versa.
+
+Class Type
+Convention + Examples
+Actions
+Verb + Noun + Action: CreateIncomeEntryAction, RecordDebtPaymentAction, GenerateMonthlyReportAction
+Services
+Noun + Service: GoalProjectionService, AmortizationService, XirrCalculationService
+Repositories
+Eloquent + Entity + Repository: EloquentGoalRepository, EloquentDebtPaymentRepository
+Contracts
+Entity + RepositoryInterface: GoalRepositoryInterface, DebtRepositoryInterface
+DTOs
+Entity + Data (input) or EntitySummary + Data (output): GoalData, GoalSummaryData
+Events
+Past tense noun phrase: GoalCompleted, BudgetExceeded, DebtPaymentRecorded
+Listeners
+Verb + Object + Listener: SendGoalCompletedEmailListener, WriteLedgerEntryListener
+Jobs
+Verb + Object + Job: ComputeXirrForInvestmentJob, GenerateMonthlyReportJob
+Notifications
+Noun + Notification: GoalMilestoneNotification, EmiReminderNotification
+Controllers
+Entity + Controller: IncomeEntryController, AmortizationScheduleController
+Requests
+Http verb + Entity + Request: StoreExpenseRequest, UpdateGoalRequest
+Resources
+Entity + Resource/Collection: InvestmentResource, InvestmentCollection
+Policies
+Entity + Policy: DebtPolicy, FinancialGoalPolicy
+Commands
+Verb + Object + Command: ComputeHealthScoresCommand, SendEmiRemindersCommand
+Exceptions
+Noun + Exception: GoalNotFoundException, InsufficientSavingBalanceException
+Enums
+Entity + StatusEnum or TypeEnum: GoalStatusEnum, AssetClassEnum
+ValueObjects
+Domain noun: Money, Percentage, FinancialYear, DeviceFingerprint, TenantId
+Traits
+Has + Feature: HasUlid, HasAuditLog, HasLedgerEntry, BelongsToTenant
+
+RULE
+No generic names: No "Manager", "Handler", "Helper", "Util" classes. Every name describes its exact responsibility.
+No abbreviations: "GoalContribution" not "GoalContrib". "AmortizationSchedule" not "AmorSched".
+Domain language first: use terms from the financial domain, not technical terms. "recordPayment" not "savePayment".
+One class per file, one responsibility per class. File name === class name (PSR-4).
