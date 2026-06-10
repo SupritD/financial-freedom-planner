@@ -21,6 +21,7 @@ class GoalController extends Controller
                     : 0;
 
                 return [
+                    'id' => $goal->id,
                     'name' => $goal->name,
                     'target_amount' => $goal->target_amount,
                     'current_amount' => $goal->current_amount,
@@ -53,5 +54,27 @@ class GoalController extends Controller
         ]);
 
         return back()->with('success', 'Goal created successfully!');
+    }
+
+    public function contribute(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'goal_id' => 'required|exists:financial_goals,id',
+            'amount' => 'required|numeric|min:1',
+        ]);
+
+        $goal = FinancialGoal::where('id', $request->goal_id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $goal->current_amount += $request->amount;
+        
+        if ($goal->current_amount >= $goal->target_amount) {
+            $goal->is_completed = true;
+        }
+        
+        $goal->save();
+
+        return back()->with('success', 'Contribution added successfully!');
     }
 }

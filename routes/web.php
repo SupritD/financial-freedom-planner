@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/transactions/expense', [\App\Http\Controllers\Web\TransactionController::class, 'storeExpense'])->name('transactions.expense.store');
     Route::get('/goals', [\App\Http\Controllers\Web\GoalController::class, 'index'])->name('goals');
     Route::post('/goals', [\App\Http\Controllers\Web\GoalController::class, 'store'])->name('goals.store');
+    Route::post('/goals/contribute', [\App\Http\Controllers\Web\GoalController::class, 'contribute'])->name('goals.contribute');
     Route::get('/budget', [\App\Http\Controllers\Web\BudgetController::class, 'index'])->name('budget');
     Route::post('/budget', [\App\Http\Controllers\Web\BudgetController::class, 'store'])->name('budget.store');
     Route::get('/savings', [\App\Http\Controllers\Web\SavingsController::class, 'index'])->name('savings');
@@ -47,6 +48,7 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/debt', [\App\Http\Controllers\Web\DebtController::class, 'index'])->name('debt');
     Route::post('/debt', [\App\Http\Controllers\Web\DebtController::class, 'store'])->name('debt.store');
+    Route::post('/debt/payment', [\App\Http\Controllers\Web\DebtController::class, 'payment'])->name('debt.payment');
 
     Route::get('/emergency-fund', [\App\Http\Controllers\Web\EmergencyFundController::class, 'index'])->name('emergency');
     Route::post('/emergency-fund', [\App\Http\Controllers\Web\EmergencyFundController::class, 'store'])->name('emergency.store');

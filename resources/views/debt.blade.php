@@ -4,6 +4,20 @@
 @section('header', 'Debt Accounts')
 
 @section('content')
+    @if(session('success'))
+        <div style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <span>{{ session('success') }}</span>
+            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+    @endif
+
+    @error('amount')
+        <div style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <span>{{ $message }}</span>
+            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+    @enderror
+
     <div class="grid-3">
         @foreach($debts as $debt)
             <div class="glass-card">
@@ -31,7 +45,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
                     <div>
                         <div class="metric-title" style="margin-bottom: 0.25rem;">Remaining Balance</div>
                         <div style="font-size: 1.125rem; font-weight: 600; color: var(--danger);">
@@ -43,6 +57,10 @@
                         <div style="color: var(--text-secondary); font-size: 1rem; font-weight: 600;">{{ number_format($debt['interest_rate'], 1) }}% APR</div>
                     </div>
                 </div>
+
+                @if(!$debt['is_paid_off'])
+                    <button onclick="openPaymentModal('{{ $debt['id'] ?? '' }}', '{{ addslashes($debt['name']) }}')" class="btn-primary" style="width: 100%; padding: 0.75rem; background: var(--success);">Make Payment</button>
+                @endif
             </div>
         @endforeach
         <!-- Add New Debt Card -->
@@ -87,4 +105,31 @@
             </form>
         </div>
     </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="paymentModalTitle">Make Payment</h3>
+                <button class="close-btn" onclick="document.getElementById('paymentModal').classList.remove('active')">&times;</button>
+            </div>
+            <form method="POST" action="{{ route('debt.payment') }}">
+                @csrf
+                <input type="hidden" name="debt_id" id="paymentDebtId">
+                <div class="form-group">
+                    <label class="form-label">Payment Amount (₹)</label>
+                    <input type="number" step="1" name="amount" class="form-input" required placeholder="5000">
+                </div>
+                <button type="submit" class="btn-primary btn-success">Submit Payment</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openPaymentModal(id, name) {
+            document.getElementById('paymentDebtId').value = id;
+            document.getElementById('paymentModalTitle').innerText = 'Make Payment towards ' + name;
+            document.getElementById('paymentModal').classList.add('active');
+        }
+    </script>
 @endsection

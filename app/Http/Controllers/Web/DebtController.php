@@ -21,6 +21,7 @@ class DebtController extends Controller
                     : 0;
 
                 return [
+                    'id' => $debt->id,
                     'name' => $debt->name,
                     'type' => ucfirst(str_replace('_', ' ', $debt->type)),
                     'principal_amount' => $debt->principal_amount,
@@ -56,5 +57,31 @@ class DebtController extends Controller
         ]);
 
         return back()->with('success', 'Debt account created successfully!');
+    }
+
+    public function payment(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'debt_id' => 'required|exists:debt_accounts,id',
+            'amount' => 'required|numeric|min:1',
+        ]);
+
+        $debt = DebtAccount::where('id', $request->debt_id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        if ($request->amount > $debt->current_balance) {
+            return back()->withErrors(['amount' => 'Payment cannot exceed the remaining balance.']);
+        }
+
+        $debt->current_balance -= $request->amount;
+        
+        if ($debt->current_balance <= 0) {
+            $debt->is_paid_off = true;
+        }
+        
+        $debt->save();
+
+        return back()->with('success', 'Debt payment recorded successfully!');
     }
 }

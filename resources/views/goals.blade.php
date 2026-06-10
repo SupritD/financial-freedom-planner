@@ -4,6 +4,20 @@
 @section('header', 'Your Financial Goals')
 
 @section('content')
+    @if(session('success'))
+        <div style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <span>{{ session('success') }}</span>
+            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+    @endif
+
+    @error('amount')
+        <div style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <span>{{ $message }}</span>
+            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
+        </div>
+    @enderror
+
     <div class="grid-3">
         @foreach($goals as $goal)
             <div class="glass-card">
@@ -28,7 +42,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
                     <div>
                         <div class="metric-title" style="margin-bottom: 0.25rem;">Current / Target</div>
                         <div style="font-size: 1.125rem; font-weight: 600;">
@@ -40,6 +54,10 @@
                         <div style="color: var(--text-secondary); font-size: 0.875rem;">{{ $goal['deadline'] }}</div>
                     </div>
                 </div>
+
+                @if(!$goal['is_completed'])
+                    <button onclick="openContributeModal('{{ $goal['id'] }}', '{{ addslashes($goal['name']) }}')" class="btn-primary" style="width: 100%; padding: 0.75rem;">Contribute</button>
+                @endif
             </div>
         @endforeach
         
@@ -50,6 +68,33 @@
         </div>
     </div>
 
+    <!-- Contribute Modal -->
+    <div id="contributeModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="contributeModalTitle">Contribute to Goal</h3>
+                <button class="close-btn" onclick="document.getElementById('contributeModal').classList.remove('active')">&times;</button>
+            </div>
+            <form method="POST" action="{{ route('goals.contribute') }}">
+                @csrf
+                <input type="hidden" name="goal_id" id="contributeGoalId">
+                <div class="form-group">
+                    <label class="form-label">Contribution Amount (₹)</label>
+                    <input type="number" step="1" name="amount" class="form-input" required placeholder="5000">
+                </div>
+                <button type="submit" class="btn-primary">Add Contribution</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openContributeModal(id, name) {
+            document.getElementById('contributeGoalId').value = id;
+            document.getElementById('contributeModalTitle').innerText = 'Contribute to ' + name;
+            document.getElementById('contributeModal').classList.add('active');
+        }
+    </script>
+        
     <!-- Goal Modal -->
     <div id="goalModal" class="modal-overlay">
         <div class="modal-content">
