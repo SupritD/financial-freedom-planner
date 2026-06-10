@@ -77,7 +77,11 @@ class TransactionController extends Controller
         $data['tenant_id'] = Auth::user()->tenant_id;
         $data['currency'] = 'INR';
 
-        $action->execute($data);
+        try {
+            $action->execute($data);
+        } catch (\Exception $e) {
+            return back()->withErrors(['amount' => $e->getMessage()]);
+        }
 
         return back()->with('success', 'Expense added successfully!');
     }

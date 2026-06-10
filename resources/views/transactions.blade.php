@@ -10,8 +10,9 @@
     </div>
 
     @if(session('success'))
-        <div style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
-            {{ session('success') }}
+        <div style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <span>{{ session('success') }}</span>
+            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
         </div>
     @endif
 
@@ -79,7 +80,7 @@
     </div>
 
     <!-- Expense Modal -->
-    <div id="expenseModal" class="modal-overlay">
+    <div id="expenseModal" class="modal-overlay {{ $errors->has('amount') ? 'active' : '' }}">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Record Expense</h3>
@@ -106,6 +107,9 @@
                 <div class="form-group">
                     <label class="form-label">Amount (₹)</label>
                     <input type="number" step="0.01" name="amount" class="form-input" required placeholder="1200.00">
+                    @error('amount')
+                        <div style="color: var(--danger); font-size: 0.875rem; margin-top: 0.5rem;">{{ $message }}</div>
+                    @enderror
                 </div>
                 <button type="submit" class="btn-primary btn-danger">Save Expense</button>
             </form>

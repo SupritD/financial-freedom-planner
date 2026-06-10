@@ -12,7 +12,8 @@ use Domain\SharedKernel\Models\LedgerAccount;
 class CreateExpenseAction
 {
     public function __construct(
-        private LedgerService $ledgerService
+        private LedgerService $ledgerService,
+        private \Domain\Expense\Services\BudgetCheckService $budgetCheckService
     ) {}
 
     public function execute(array $data): Expense
@@ -22,6 +23,20 @@ class CreateExpenseAction
             $expenseDate = strtotime($data['expense_date']);
             $month = (int)date('m', $expenseDate);
             $year = (int)date('Y', $expenseDate);
+
+            // Check Budget Limits
+            $budgetCheck = $this->budgetCheckService->verifyLimit(
+                $data['user_id'], 
+                $data['tenant_id'], 
+                $data['category_id'], 
+                $data['amount'], 
+                $month, 
+                $year
+            );
+
+            if ($budgetCheck['status'] === 'exceeded') {
+                throw new \Exception($budgetCheck['message']);
+            }
 
             $expense = Expense::create([
                 'user_id' => $data['user_id'],

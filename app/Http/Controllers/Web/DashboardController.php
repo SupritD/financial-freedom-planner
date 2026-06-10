@@ -99,6 +99,23 @@ class DashboardController extends Controller
             $chartExpense[] = $exp;
         }
 
+        // Goals
+        $goals = \Domain\Goal\Models\FinancialGoal::where('user_id', $user->id)
+            ->where('is_completed', false)
+            ->take(3)
+            ->get();
+
+        // Emergency Fund
+        $emergencyFund = \App\Models\EmergencyFund::where('user_id', $user->id)->first();
+        $emergencyFundGap = 0;
+        $emergencyFundTarget = 0;
+        $emergencyFundCurrent = 0;
+        if ($emergencyFund) {
+            $emergencyFundTarget = $emergencyFund->monthly_expenses * $emergencyFund->recommended_months;
+            $emergencyFundCurrent = $emergencyFund->current_amount;
+            $emergencyFundGap = max(0, $emergencyFundTarget - $emergencyFundCurrent);
+        }
+
         return view('dashboard', compact(
             'netWorth',
             'monthlyIncome',
@@ -106,7 +123,12 @@ class DashboardController extends Controller
             'recentTransactions',
             'chartLabels',
             'chartIncome',
-            'chartExpense'
+            'chartExpense',
+            'goals',
+            'emergencyFund',
+            'emergencyFundTarget',
+            'emergencyFundCurrent',
+            'emergencyFundGap'
         ));
     }
 }

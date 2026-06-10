@@ -27,6 +27,12 @@
             <a href="{{ route('transactions') }}" class="nav-link {{ request()->routeIs('transactions') ? 'active' : '' }}">
                 <i class="ph ph-arrows-left-right"></i> Transactions
             </a>
+            <a href="{{ route('budget') }}" class="nav-link {{ request()->routeIs('budget') ? 'active' : '' }}">
+                <i class="ph ph-wallet"></i> Budget
+            </a>
+            <a href="{{ route('savings') }}" class="nav-link {{ request()->routeIs('savings') ? 'active' : '' }}">
+                <i class="ph ph-piggy-bank"></i> Savings
+            </a>
             <a href="{{ route('emergency') }}" class="nav-link {{ request()->routeIs('emergency') ? 'active' : '' }}">
                 <i class="ph ph-shield-check"></i> Emergency Fund
             </a>
