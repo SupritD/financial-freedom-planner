@@ -9,14 +9,32 @@ use Illuminate\Support\Facades\Auth;
 
 class TransactionController extends Controller
 {
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
         $user = Auth::user();
 
-        $incomes = IncomeEntry::where('user_id', $user->id)
-            ->with('sourceType')
-            ->get()
-            ->map(function ($inc) {
+        $type = $request->query('type', 'all'); // 'all', 'income', 'expense'
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+        $categoryId = $request->query('category_id');
+        $perPage = (int) $request->query('per_page', 25);
+
+        $incomes = collect();
+        if ($type === 'all' || $type === 'income') {
+            $query = IncomeEntry::where('user_id', $user->id)->with('sourceType');
+            
+            if ($startDate) {
+                $query->whereDate('income_date', '>=', $startDate);
+            }
+            if ($endDate) {
+                $query->whereDate('income_date', '<=', $endDate);
+            }
+            if ($categoryId) {
+                // For incomes, category maps to source_type_id
+                $query->where('source_type_id', $categoryId);
+            }
+
+            $incomes = $query->get()->map(function ($inc) {
                 return [
                     'date' => $inc->income_date->format('Y-m-d'),
                     'type' => 'income',
@@ -24,11 +42,23 @@ class TransactionController extends Controller
                     'amount' => $inc->amount,
                 ];
             });
+        }
 
-        $expenses = Expense::where('user_id', $user->id)
-            ->with('category')
-            ->get()
-            ->map(function ($exp) {
+        $expenses = collect();
+        if ($type === 'all' || $type === 'expense') {
+            $query = Expense::where('user_id', $user->id)->with('category');
+            
+            if ($startDate) {
+                $query->whereDate('expense_date', '>=', $startDate);
+            }
+            if ($endDate) {
+                $query->whereDate('expense_date', '<=', $endDate);
+            }
+            if ($categoryId) {
+                $query->where('category_id', $categoryId);
+            }
+
+            $expenses = $query->get()->map(function ($exp) {
                 return [
                     'date' => $exp->expense_date->format('Y-m-d'),
                     'type' => 'expense',
@@ -36,10 +66,21 @@ class TransactionController extends Controller
                     'amount' => $exp->amount,
                 ];
             });
+        }
 
-        $transactions = $incomes->concat($expenses)
+        $allTransactions = $incomes->concat($expenses)
             ->sortByDesc('date')
             ->values();
+
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        
+        $transactions = new \Illuminate\Pagination\LengthAwarePaginator(
+            $allTransactions->forPage($page, $perPage),
+            $allTransactions->count(),
+            $perPage,
+            $page,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
 
         $incomeSources = \Domain\Income\Models\IncomeSourceType::where('tenant_id', $user->tenant_id)->get();
         $expenseCategories = \Domain\Expense\Models\ExpenseCategory::where('tenant_id', $user->tenant_id)->get();
