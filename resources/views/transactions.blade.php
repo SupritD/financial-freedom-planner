@@ -102,7 +102,7 @@
         </div>
         
         <div class="mt-6">
-            {{ $transactions->links() }}
+            {{ $transactions->links('components.pagination') }}
         </div>
     </div>
 

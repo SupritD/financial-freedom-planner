@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,10 +13,12 @@
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body class="bg-brand-bg-dark text-brand-text-primary font-sans flex min-h-screen overflow-x-hidden">
 
     <!-- Mobile Header -->
-    <div class="lg:hidden fixed top-0 left-0 right-0 h-16 bg-brand-surface border-b border-brand-border flex items-center justify-between px-4 z-40 shadow-md">
+    <div
+        class="lg:hidden fixed top-0 left-0 right-0 h-16 bg-brand-surface border-b border-brand-border flex items-center justify-between px-4 z-40 shadow-md">
         <a href="{{ route('dashboard') }}" class="text-xl font-bold text-brand-text-primary flex items-center gap-2">
             <i class="ph ph-infinity text-brand-accent-primary"></i>
             FF<span class="text-brand-accent-primary">Planner</span>
@@ -26,12 +29,15 @@
     </div>
 
     <!-- Sidebar Overlay -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-[45] hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
+    <div id="sidebar-overlay"
+        class="fixed inset-0 bg-black/60 z-[45] hidden lg:hidden backdrop-blur-sm transition-opacity"></div>
 
     <!-- Sidebar -->
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-[50] w-64 bg-brand-surface border-r border-brand-border p-6 flex flex-col gap-8 transform -translate-x-full transition-transform duration-300 lg:translate-x-0 lg:static lg:flex-shrink-0 shadow-2xl lg:shadow-none">
+    <aside id="sidebar"
+        class="fixed inset-y-0 left-0 z-[50] w-64 bg-brand-surface border-r border-brand-border p-6 flex flex-col gap-8 transform -translate-x-full transition-transform duration-300 lg:translate-x-0 lg:static lg:flex-shrink-0 shadow-2xl lg:shadow-none">
         <div class="flex items-center justify-between">
-            <a href="{{ route('dashboard') }}" class="text-2xl font-bold text-brand-text-primary flex items-center gap-2">
+            <a href="{{ route('dashboard') }}"
+                class="text-2xl font-bold text-brand-text-primary flex items-center gap-2">
                 <i class="ph ph-infinity text-brand-accent-primary"></i>
                 FF<span class="text-brand-accent-primary">Planner</span>
             </a>
@@ -41,48 +47,61 @@
         </div>
 
         <nav class="flex flex-col gap-2 overflow-y-auto">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('dashboard') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
+            <a href="{{ route('dashboard') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('dashboard') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
                 <i class="ph ph-squares-four text-xl"></i> Dashboard
             </a>
-            <a href="{{ route('transactions') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('transactions') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
+            <a href="{{ route('transactions') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('transactions') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
                 <i class="ph ph-arrows-left-right text-xl"></i> Transactions
             </a>
-            <a href="{{ route('budget') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('budget') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
+            <a href="{{ route('budget') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('budget') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
                 <i class="ph ph-wallet text-xl"></i> Budget
             </a>
-            <a href="{{ route('savings') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('savings') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
+            <a href="{{ route('savings') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('savings') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
                 <i class="ph ph-piggy-bank text-xl"></i> Savings
             </a>
-            <a href="{{ route('investments') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('investments') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
+            <a href="{{ route('investments') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('investments') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
                 <i class="ph ph-trend-up text-xl"></i> Investments
             </a>
-            <a href="{{ route('emergency') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('emergency') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
+            <a href="{{ route('emergency') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('emergency') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
                 <i class="ph ph-shield-check text-xl"></i> Emergency Fund
             </a>
-            <a href="{{ route('goals') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('goals') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
+            <a href="{{ route('goals') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('goals') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
                 <i class="ph ph-target text-xl"></i> Goals
             </a>
-            <a href="{{ route('reports') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('reports') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
+            <a href="{{ route('reports') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('reports') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
                 <i class="ph ph-chart-pie-slice text-xl"></i> Reports
             </a>
-            <a href="{{ route('debt') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('debt') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
+            <a href="{{ route('debt') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('debt') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
                 <i class="ph ph-bank text-xl"></i> Debt
             </a>
 
             @if(auth()->user() && auth()->user()->is_admin)
                 <div class="my-4 border-t border-brand-border"></div>
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-brand-bg-dark/50 text-purple-500' : 'text-purple-400 hover:bg-brand-bg-dark/50 hover:text-purple-500' }}">
+                <a href="{{ route('admin.dashboard') }}"
+                    class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('admin.dashboard') ? 'bg-brand-bg-dark/50 text-purple-500' : 'text-purple-400 hover:bg-brand-bg-dark/50 hover:text-purple-500' }}">
                     <i class="ph ph-shield-star text-xl"></i> Admin Panel
                 </a>
             @endif
 
             <div class="my-4 border-t border-brand-border"></div>
 
-            <a href="{{ route('profile') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('profile') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
+            <a href="{{ route('profile') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-colors {{ request()->routeIs('profile') ? 'bg-brand-bg-dark/50 text-brand-accent-primary' : 'text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-accent-primary' }}">
                 <i class="ph ph-user text-xl"></i> Profile
             </a>
 
-            <form method="POST" action="{{ route('logout') }}" class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-danger transition-colors cursor-pointer" onclick="this.submit();">
+            <form method="POST" action="{{ route('logout') }}"
+                class="flex items-center gap-4 px-4 py-3 rounded-xl font-medium text-brand-text-secondary hover:bg-brand-bg-dark/50 hover:text-brand-danger transition-colors cursor-pointer"
+                onclick="this.submit();">
                 @csrf
                 <i class="ph ph-sign-out text-xl"></i> Logout
             </form>
@@ -115,4 +134,5 @@
         });
     </script>
 </body>
+
 </html>

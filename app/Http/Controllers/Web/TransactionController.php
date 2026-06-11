@@ -81,6 +81,8 @@ class TransactionController extends Controller
             $page,
             ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
         );
+        
+        $transactions->onEachSide(1);
 
         $incomeSources = \Domain\Income\Models\IncomeSourceType::where('tenant_id', $user->tenant_id)->get();
         $expenseCategories = \Domain\Expense\Models\ExpenseCategory::where('tenant_id', $user->tenant_id)->get();
