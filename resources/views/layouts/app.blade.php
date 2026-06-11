@@ -42,6 +42,9 @@
             <a href="{{ route('goals') }}" class="nav-link {{ request()->routeIs('goals') ? 'active' : '' }}">
                 <i class="ph ph-target"></i> Goals
             </a>
+            <a href="{{ route('reports') }}" class="nav-link {{ request()->routeIs('reports') ? 'active' : '' }}">
+                <i class="ph ph-chart-pie-slice"></i> Reports
+            </a>
             <a href="{{ route('debt') }}" class="nav-link {{ request()->routeIs('debt') ? 'active' : '' }}">
                 <i class="ph ph-bank"></i> Debt
             </a>
