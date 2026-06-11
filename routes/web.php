@@ -45,6 +45,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/savings', [\App\Http\Controllers\Web\SavingsController::class, 'store'])->name('savings.store');
     Route::post('/savings/deposit', [\App\Http\Controllers\Web\SavingsController::class, 'deposit'])->name('savings.deposit');
     Route::post('/savings/withdraw', [\App\Http\Controllers\Web\SavingsController::class, 'withdraw'])->name('savings.withdraw');
+    Route::get('/investments', [\App\Http\Controllers\Web\InvestmentController::class, 'index'])->name('investments');
+    Route::post('/investments', [\App\Http\Controllers\Web\InvestmentController::class, 'store'])->name('investments.store');
+    Route::post('/investments/update', [\App\Http\Controllers\Web\InvestmentController::class, 'updateValue'])->name('investments.update');
     
     Route::get('/debt', [\App\Http\Controllers\Web\DebtController::class, 'index'])->name('debt');
     Route::post('/debt', [\App\Http\Controllers\Web\DebtController::class, 'store'])->name('debt.store');

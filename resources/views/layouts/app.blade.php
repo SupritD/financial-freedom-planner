@@ -33,6 +33,9 @@
             <a href="{{ route('savings') }}" class="nav-link {{ request()->routeIs('savings') ? 'active' : '' }}">
                 <i class="ph ph-piggy-bank"></i> Savings
             </a>
+            <a href="{{ route('investments') }}" class="nav-link {{ request()->routeIs('investments') ? 'active' : '' }}">
+                <i class="ph ph-trend-up"></i> Investments
+            </a>
             <a href="{{ route('emergency') }}" class="nav-link {{ request()->routeIs('emergency') ? 'active' : '' }}">
                 <i class="ph ph-shield-check"></i> Emergency Fund
             </a>
