@@ -20,6 +20,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/forgot-password', [WebAuthController::class, 'sendResetLink'])->name('password.email');
     Route::get('/reset-password/{token}', [WebAuthController::class, 'showResetPassword'])->name('password.reset');
     Route::post('/reset-password', [WebAuthController::class, 'resetPassword'])->name('password.store');
+    
+    Route::get('/login/2fa', [WebAuthController::class, 'showTwoFactorChallenge'])->name('login.2fa');
+    Route::post('/login/2fa', [WebAuthController::class, 'verifyTwoFactor'])->name('login.2fa.verify');
 });
 
 // Protected Routes
@@ -60,11 +63,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/emergency-fund', [\App\Http\Controllers\Web\EmergencyFundController::class, 'store'])->name('emergency.store');
     Route::post('/emergency-fund/deposit', [\App\Http\Controllers\Web\EmergencyFundController::class, 'deposit'])->name('emergency.deposit');
 
-    // Settings & Profile
-    Route::get('/settings', [\App\Http\Controllers\Web\SettingsController::class, 'index'])->name('settings');
-    Route::put('/settings/profile', [\App\Http\Controllers\Web\SettingsController::class, 'updateProfile'])->name('settings.profile.update');
-    Route::put('/settings/password', [\App\Http\Controllers\Web\SettingsController::class, 'updatePassword'])->name('settings.password.update');
-    Route::post('/settings/2fa', [\App\Http\Controllers\Web\SettingsController::class, 'toggleTwoFactor'])->name('settings.2fa.toggle');
-    Route::get('/settings/export', [\App\Http\Controllers\Web\SettingsController::class, 'downloadData'])->name('settings.export');
-    Route::delete('/settings/account', [\App\Http\Controllers\Web\SettingsController::class, 'deleteAccount'])->name('settings.account.delete');
+    Route::get('/profile', [\App\Http\Controllers\Web\ProfileController::class, 'index'])->name('profile');
+    Route::post('/profile', [\App\Http\Controllers\Web\ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/export', [\App\Http\Controllers\Web\ProfileController::class, 'exportData'])->name('profile.export');
+    Route::delete('/profile', [\App\Http\Controllers\Web\ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/2fa/enable', [\App\Http\Controllers\Web\ProfileController::class, 'enableTwoFactor'])->name('profile.2fa.enable');
+    Route::post('/profile/2fa/confirm', [\App\Http\Controllers\Web\ProfileController::class, 'confirmTwoFactor'])->name('profile.2fa.confirm');
+    Route::delete('/profile/2fa/disable', [\App\Http\Controllers\Web\ProfileController::class, 'disableTwoFactor'])->name('profile.2fa.disable');
+
 });

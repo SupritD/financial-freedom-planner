@@ -50,12 +50,20 @@ class WebAuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
+        $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        $user = User::where('email', $request->email)->first();
+
+        if ($user && Hash::check($request->password, $user->password)) {
+            if (!empty($user->two_factor_secret)) {
+                $request->session()->put('2fa_user_id', $user->id);
+                return redirect()->route('login.2fa');
+            }
+
+            Auth::login($user);
             $request->session()->regenerate();
             return redirect()->intended('dashboard');
         }
@@ -63,6 +71,36 @@ class WebAuthController extends Controller
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
+    }
+
+    public function showTwoFactorChallenge(Request $request)
+    {
+        if (!$request->session()->has('2fa_user_id')) {
+            return redirect()->route('login');
+        }
+        return view('auth.two-factor-challenge');
+    }
+
+    public function verifyTwoFactor(Request $request)
+    {
+        $request->validate(['one_time_password' => 'required|string']);
+
+        $userId = $request->session()->get('2fa_user_id');
+        if (!$userId) {
+            return redirect()->route('login');
+        }
+
+        $user = User::find($userId);
+        $google2fa = new \PragmaRX\Google2FAQRCode\Google2FA();
+
+        if ($google2fa->verifyKey($user->two_factor_secret, $request->one_time_password)) {
+            $request->session()->forget('2fa_user_id');
+            Auth::login($user);
+            $request->session()->regenerate();
+            return redirect()->intended('dashboard');
+        }
+
+        return back()->withErrors(['one_time_password' => 'The provided two-factor authentication code was invalid.']);
     }
 
     public function logout(Request $request)

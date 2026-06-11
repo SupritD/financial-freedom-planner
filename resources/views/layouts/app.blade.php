@@ -48,21 +48,25 @@
             <a href="{{ route('debt') }}" class="nav-link {{ request()->routeIs('debt') ? 'active' : '' }}">
                 <i class="ph ph-bank"></i> Debt
             </a>
-            <a href="{{ route('settings') }}" class="nav-link {{ request()->routeIs('settings') ? 'active' : '' }}">
-                <i class="ph ph-gear"></i> Settings
-            </a>
         </nav>
     </aside>
 
     <main class="main-content">
         <header class="top-bar">
             <h2>@yield('header')</h2>
-            <form method="POST" action="{{ route('logout') }}" class="user-profile" style="cursor: pointer;" onclick="this.submit();">
-                @csrf
-                <i class="ph ph-user-circle"></i>
-                <span>{{ auth()->user()->name ?? 'Demo User' }}</span>
-                <i class="ph ph-sign-out" style="margin-left: 0.5rem; color: var(--text-secondary);"></i>
-            </form>
+            
+            <div style="display: flex; gap: 1rem;">
+                <a href="{{ route('profile') }}" class="user-profile" style="text-decoration: none; color: inherit;">
+                    <i class="ph ph-user"></i>
+                    <span>Profile</span>
+                </a>
+
+                <form method="POST" action="{{ route('logout') }}" class="user-profile" style="cursor: pointer;" onclick="this.submit();">
+                    @csrf
+                    <i class="ph ph-sign-out"></i>
+                    <span>Logout</span>
+                </form>
+            </div>
         </header>
 
         @yield('content')
