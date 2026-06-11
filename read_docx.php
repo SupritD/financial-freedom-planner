@@ -1,26 +1,22 @@
 <?php
-
-$file = $argv[1];
-$out = $argv[2];
-
-if (!file_exists($file)) {
-    die("File not found: $file");
+function extractDocxText($filename) {
+    $zip = new ZipArchive();
+    if ($zip->open($filename) === TRUE) {
+        $content = $zip->getFromName('word/document.xml');
+        $zip->close();
+        if ($content !== false) {
+            $content = str_replace('</w:p>', "\n", $content);
+            $text = strip_tags($content);
+            return trim($text);
+        }
+    }
+    return false;
 }
 
-$zip = new ZipArchive;
-if ($zip->open($file) === TRUE) {
-    if (($index = $zip->locateName('word/document.xml')) !== false) {
-        $data = $zip->getFromIndex($index);
-        $zip->close();
-        
-        // Remove XML tags and print text
-        $text = strip_tags($data);
-        $text = preg_replace('/\s+/', ' ', $text);
-        file_put_contents($out, wordwrap($text, 100) . "\n\n");
-    } else {
-        echo "Could not find word/document.xml\n";
-        $zip->close();
-    }
-} else {
-    echo "Failed to open zip archive\n";
+$files = glob('docx/*.docx');
+foreach ($files as $file) {
+    echo "=================================================\n";
+    echo "FILE: " . basename($file) . "\n";
+    echo "=================================================\n";
+    echo extractDocxText($file) . "\n\n";
 }
