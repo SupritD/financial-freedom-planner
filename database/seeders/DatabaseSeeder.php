@@ -36,6 +36,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'demo@example.com',
             'password' => bcrypt('password'), // Demo login
             'is_onboarded' => true,
+            'is_admin' => true,
         ]);
 
         // 3. Create Income Sources

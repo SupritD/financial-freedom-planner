@@ -48,6 +48,13 @@
             <a href="{{ route('debt') }}" class="nav-link {{ request()->routeIs('debt') ? 'active' : '' }}">
                 <i class="ph ph-bank"></i> Debt
             </a>
+
+            @if(auth()->user() && auth()->user()->is_admin)
+                <div style="margin: 1.5rem 0; border-top: 1px solid var(--border);"></div>
+                <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" style="color: #a855f7;">
+                    <i class="ph ph-shield-star"></i> Admin Panel
+                </a>
+            @endif
         </nav>
     </aside>
 

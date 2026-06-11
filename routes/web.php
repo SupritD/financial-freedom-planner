@@ -71,4 +71,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/2fa/confirm', [\App\Http\Controllers\Web\ProfileController::class, 'confirmTwoFactor'])->name('profile.2fa.confirm');
     Route::delete('/profile/2fa/disable', [\App\Http\Controllers\Web\ProfileController::class, 'disableTwoFactor'])->name('profile.2fa.disable');
 
+    // Admin Routes
+    Route::middleware(['is_admin'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Web\AdminController::class, 'index'])->name('dashboard');
+    });
 });
