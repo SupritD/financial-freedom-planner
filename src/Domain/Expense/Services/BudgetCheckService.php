@@ -7,7 +7,7 @@ use Domain\Expense\Models\ExpenseBudget;
 
 class BudgetCheckService
 {
-    public function verifyLimit(int $userId, string $tenantId, int $categoryId, float $amount, int $month, int $year): array
+    public function verifyLimit(string|int $userId, string $tenantId, string|int $categoryId, float $amount, int $month, int $year): array
     {
         $budget = ExpenseBudget::where('tenant_id', $tenantId)
             ->where('category_id', $categoryId)

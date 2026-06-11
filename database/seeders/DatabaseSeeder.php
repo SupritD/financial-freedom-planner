@@ -10,6 +10,9 @@ use Domain\Income\Actions\RecordIncomeEntryAction;
 use Domain\Expense\Actions\CreateExpenseAction;
 use Domain\Goal\Models\FinancialGoal;
 use Domain\Debt\Models\DebtAccount;
+use Domain\Expense\Models\ExpenseBudget;
+use App\Models\EmergencyFund;
+use Domain\SharedKernel\Models\LedgerAccount;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -32,6 +35,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Demo User',
             'email' => 'demo@example.com',
             'password' => bcrypt('password'), // Demo login
+            'is_onboarded' => true,
         ]);
 
         // 3. Create Income Sources
@@ -64,13 +68,26 @@ class DatabaseSeeder extends Seeder
             $categoryModels[] = ExpenseCategory::create(array_merge($cat, ['tenant_id' => $tenant->id]));
         }
 
+        // 4.5 Seed Expense Budgets for current month
+        $currentMonth = Carbon::now();
+        foreach ($categoryModels as $catModel) {
+            ExpenseBudget::create([
+                'tenant_id' => $tenant->id,
+                'category_id' => $catModel->id,
+                'amount' => $catModel->slug === 'rent' ? 50000 : 10000,
+                'month' => $currentMonth->month,
+                'year' => $currentMonth->year,
+                'alert_threshold' => 80,
+            ]);
+        }
+
         // 5. Generate 6 Months of Realistic Historical Data
         $startDate = Carbon::now()->subMonths(6)->startOfMonth();
         $endDate = Carbon::now();
 
         // Iterate month by month
-        $currentMonth = $startDate->copy();
-        while ($currentMonth <= $endDate) {
+        $loopMonth = $startDate->copy();
+        while ($loopMonth <= $endDate) {
             
             // Add Salary for the month
             $recordIncome->execute([
@@ -79,7 +96,7 @@ class DatabaseSeeder extends Seeder
                 'source_type_id' => $salarySource->id,
                 'amount' => 150000.00, // 1.5L INR
                 'currency' => 'INR',
-                'income_date' => $currentMonth->copy()->addDays(2)->format('Y-m-d'), // Salary on 2nd
+                'income_date' => $loopMonth->copy()->addDays(2)->format('Y-m-d'), // Salary on 2nd
             ]);
 
             // Add occasional freelance income
@@ -90,14 +107,14 @@ class DatabaseSeeder extends Seeder
                     'source_type_id' => $freelanceSource->id,
                     'amount' => rand(10000, 40000),
                     'currency' => 'INR',
-                    'income_date' => $currentMonth->copy()->addDays(rand(10, 25))->format('Y-m-d'),
+                    'income_date' => $loopMonth->copy()->addDays(rand(10, 25))->format('Y-m-d'),
                 ]);
             }
 
             // Generate daily random expenses
-            $daysInMonth = $currentMonth->daysInMonth;
+            $daysInMonth = $loopMonth->daysInMonth;
             // Cap to current day if we are in the current month
-            $daysToGenerate = ($currentMonth->isSameMonth(Carbon::now())) ? Carbon::now()->day : $daysInMonth;
+            $daysToGenerate = ($loopMonth->isSameMonth(Carbon::now())) ? Carbon::now()->day : $daysInMonth;
 
             for ($day = 1; $day <= $daysToGenerate; $day++) {
                 // Fixed Rent on the 1st
@@ -108,7 +125,7 @@ class DatabaseSeeder extends Seeder
                         'category_id' => $categoryModels[0]->id, // Rent
                         'title' => 'Monthly Rent',
                         'amount' => 45000.00,
-                        'expense_date' => $currentMonth->copy()->addDays($day - 1)->format('Y-m-d'),
+                        'expense_date' => $loopMonth->copy()->addDays($day - 1)->format('Y-m-d'),
                     ]);
                 }
 
@@ -124,29 +141,33 @@ class DatabaseSeeder extends Seeder
                         default => rand(100, 1000)
                     };
 
-                    $createExpense->execute([
-                        'user_id' => $user->id,
-                        'tenant_id' => $tenant->id,
-                        'category_id' => $randomCat->id,
-                        'title' => ucfirst($randomCat->slug) . ' expense',
-                        'amount' => $amount,
-                        'expense_date' => $currentMonth->copy()->addDays($day - 1)->format('Y-m-d'),
-                    ]);
+                    try {
+                        $createExpense->execute([
+                            'user_id' => $user->id,
+                            'tenant_id' => $tenant->id,
+                            'category_id' => $randomCat->id,
+                            'title' => ucfirst($randomCat->slug) . ' expense',
+                            'amount' => $amount,
+                            'expense_date' => $loopMonth->copy()->addDays($day - 1)->format('Y-m-d'),
+                        ]);
+                    } catch (\Exception $e) {
+                        // Ignore budget exceeded exceptions during seeding
+                    }
                 }
             }
 
-            $currentMonth->addMonth();
+            $loopMonth->addMonth();
         }
 
         // 6. Create active Goal and Debt
         FinancialGoal::create([
             'tenant_id' => $tenant->id,
             'user_id' => $user->id,
-            'name' => 'Emergency Fund',
-            'target_amount' => 500000.00,
-            'current_amount' => 150000.00,
+            'name' => 'Vacation Fund',
+            'target_amount' => 200000.00,
+            'current_amount' => 50000.00,
             'currency' => 'INR',
-            'deadline' => Carbon::now()->addYear()->format('Y-m-d'),
+            'deadline' => Carbon::now()->addMonths(6)->format('Y-m-d'),
             'is_completed' => false,
         ]);
 
@@ -162,6 +183,52 @@ class DatabaseSeeder extends Seeder
             'minimum_payment' => 18000.00,
             'due_date_day' => 10,
             'is_paid_off' => false,
+        ]);
+
+        // 7. Seed Emergency Fund
+        EmergencyFund::create([
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
+            'monthly_expenses' => 60000.00,
+            'recommended_months' => 6,
+            'current_amount' => 150000.00,
+        ]);
+
+        // 8. Seed Savings and Investments (Ledger Accounts)
+        LedgerAccount::create([
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
+            'account_type' => 'savings',
+            'name' => 'Emergency Savings Bucket',
+            'current_balance' => 150000.00,
+            'is_system' => false,
+        ]);
+
+        LedgerAccount::create([
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
+            'account_type' => 'savings',
+            'name' => 'Vacation Savings Bucket',
+            'current_balance' => 50000.00,
+            'is_system' => false,
+        ]);
+
+        LedgerAccount::create([
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
+            'account_type' => 'investment',
+            'name' => 'NIFTY 50 Index Fund',
+            'current_balance' => 350000.00,
+            'is_system' => false,
+        ]);
+
+        LedgerAccount::create([
+            'user_id' => $user->id,
+            'tenant_id' => $tenant->id,
+            'account_type' => 'investment',
+            'name' => 'Digital Gold',
+            'current_balance' => 85000.00,
+            'is_system' => false,
         ]);
     }
 }
