@@ -4,89 +4,91 @@
 @section('header', 'Investment Portfolio')
 
 @section('content')
-    <div class="grid-3" style="margin-bottom: 2rem;">
-        <div class="glass-card" style="grid-column: span 3; text-align: center; padding: 3rem 2rem;">
-            <div class="metric-title" style="font-size: 1.25rem;">Total Portfolio Value</div>
-            <div class="metric-value" style="color: var(--accent-primary); font-size: 3rem; margin-top: 1rem;">₹{{ number_format($totalInvestments, 2) }}</div>
-            <button onclick="document.getElementById('createInvestmentModal').classList.add('active')" class="btn-primary" style="margin-top: 2rem; width: auto; padding: 0.75rem 2rem;">+ Track New Investment</button>
+    <div class="mb-8">
+        <div class="glass-card text-center py-12 px-6">
+            <div class="text-brand-text-secondary text-lg uppercase tracking-wider">Total Portfolio Value</div>
+            <div class="text-brand-accent-primary text-5xl font-bold mt-4">₹{{ number_format($totalInvestments, 2) }}</div>
+            <button onclick="document.getElementById('createInvestmentModal').classList.remove('hidden')" class="btn-primary mt-8 px-8 py-3 w-full sm:w-auto">
+                + Track New Investment
+            </button>
         </div>
     </div>
 
     @if(session('success'))
-        <div style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div class="bg-brand-success/20 text-brand-success p-4 rounded-xl mb-6 flex justify-between items-center">
             <span>{{ session('success') }}</span>
-            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            <button onclick="this.parentElement.style.display='none'" class="text-brand-success hover:text-white transition-colors text-xl font-bold">&times;</button>
         </div>
     @endif
     
     @error('new_value')
-        <div style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div class="bg-brand-danger/20 text-brand-danger p-4 rounded-xl mb-6 flex justify-between items-center">
             <span>{{ $message }}</span>
-            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            <button onclick="this.parentElement.style.display='none'" class="text-brand-danger hover:text-white transition-colors text-xl font-bold">&times;</button>
         </div>
     @enderror
 
-    <div class="grid-3">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @forelse($investments as $investment)
-            <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="glass-card flex flex-col justify-between h-full min-h-[200px]">
                 <div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                        <i class="ph ph-trend-up" style="font-size: 1.5rem; color: var(--accent-primary);"></i>
-                        <span style="font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">{{ $investment->name }}</span>
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="ph ph-trend-up text-2xl text-brand-accent-primary"></i>
+                        <span class="text-xl font-semibold text-brand-text-primary">{{ $investment->name }}</span>
                     </div>
-                    <div style="font-size: 2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem;">
+                    <div class="text-3xl font-bold text-brand-text-primary mb-6">
                         ₹{{ number_format($investment->current_balance) }}
                     </div>
                 </div>
                 
-                <button onclick="openUpdateModal('{{ $investment->id }}', '{{ addslashes($investment->name) }}', '{{ $investment->current_balance }}')" class="btn-primary" style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.1); color: var(--text-primary);">Update Value</button>
+                <button onclick="openUpdateModal('{{ $investment->id }}', '{{ addslashes($investment->name) }}', '{{ $investment->current_balance }}')" class="w-full bg-white/10 text-brand-text-primary py-3 rounded-lg font-medium hover:bg-white/20 transition-colors mt-auto">Update Value</button>
             </div>
         @empty
-            <div style="grid-column: span 3; text-align: center; color: var(--text-secondary); padding: 3rem;">
-                <i class="ph ph-chart-line-up" style="font-size: 4rem; opacity: 0.5; margin-bottom: 1rem; display: block;"></i>
+            <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center text-brand-text-secondary py-12">
+                <i class="ph ph-chart-line-up text-6xl opacity-50 mb-4 block"></i>
                 <p>No investments tracked. Add an asset to start monitoring your portfolio!</p>
             </div>
         @endforelse
     </div>
 
     <!-- Create Investment Modal -->
-    <div id="createInvestmentModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Track New Investment</h3>
-                <button class="close-btn" onclick="document.getElementById('createInvestmentModal').classList.remove('active')">&times;</button>
+    <div id="createInvestmentModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center p-4 hidden flex">
+        <div class="bg-brand-surface border border-brand-border rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-brand-text-primary">Track New Investment</h3>
+                <button class="text-brand-text-secondary hover:text-brand-text-primary text-2xl transition-colors focus:outline-none" onclick="document.getElementById('createInvestmentModal').classList.add('hidden')">&times;</button>
             </div>
-            <form method="POST" action="{{ route('investments.store') }}">
+            <form method="POST" action="{{ route('investments.store') }}" class="space-y-6">
                 @csrf
-                <div class="form-group">
+                <div>
                     <label class="form-label">Asset Name / Ticker</label>
                     <input type="text" name="name" class="form-input" required placeholder="e.g. NIFTY 50 Index Fund">
                 </div>
-                <div class="form-group">
+                <div>
                     <label class="form-label">Current Value (₹)</label>
                     <input type="number" step="0.01" name="initial_value" class="form-input" placeholder="0.00">
                 </div>
-                <button type="submit" class="btn-primary">Track Investment</button>
+                <button type="submit" class="btn-primary w-full py-3">Track Investment</button>
             </form>
         </div>
     </div>
 
     <!-- Update Value Modal -->
-    <div id="updateModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="updateModalTitle">Update Value</h3>
-                <button class="close-btn" onclick="document.getElementById('updateModal').classList.remove('active')">&times;</button>
+    <div id="updateModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center p-4 hidden flex">
+        <div class="bg-brand-surface border border-brand-border rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="updateModalTitle" class="text-xl font-semibold text-brand-text-primary">Update Value</h3>
+                <button class="text-brand-text-secondary hover:text-brand-text-primary text-2xl transition-colors focus:outline-none" onclick="document.getElementById('updateModal').classList.add('hidden')">&times;</button>
             </div>
-            <form id="updateForm" method="POST" action="{{ route('investments.update') }}">
+            <form id="updateForm" method="POST" action="{{ route('investments.update') }}" class="space-y-6">
                 @csrf
                 <input type="hidden" name="account_id" id="updateAccountId">
                 
-                <div class="form-group">
+                <div>
                     <label class="form-label">New Current Value (₹)</label>
                     <input type="number" step="0.01" name="new_value" id="updateNewValue" class="form-input" required placeholder="1000.00">
                 </div>
-                <button type="submit" class="btn-primary">Save Updated Value</button>
+                <button type="submit" class="btn-primary w-full py-3">Save Updated Value</button>
             </form>
         </div>
     </div>
@@ -96,7 +98,7 @@
             document.getElementById('updateAccountId').value = accountId;
             document.getElementById('updateNewValue').value = currentValue;
             document.getElementById('updateModalTitle').innerText = 'Update ' + accountName;
-            document.getElementById('updateModal').classList.add('active');
+            document.getElementById('updateModal').classList.remove('hidden');
         }
     </script>
 @endsection

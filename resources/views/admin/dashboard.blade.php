@@ -4,66 +4,66 @@
 @section('header', 'Admin Dashboard')
 
 @section('content')
-    <div style="margin-bottom: 2rem;">
-        <div style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 1rem; border-radius: 12px; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
-            <i class="ph ph-shield-check" style="font-size: 1.25rem;"></i>
-            <strong>Administrator Access</strong> - You are viewing platform-wide data.
+    <div class="mb-8">
+        <div class="bg-brand-success/10 text-brand-success p-4 rounded-xl inline-flex items-center gap-2 mb-6 border border-brand-success/20">
+            <i class="ph ph-shield-check text-xl"></i>
+            <span><strong>Administrator Access</strong> - You are viewing platform-wide data.</span>
         </div>
 
         <!-- Global Metrics -->
-        <div class="grid-4" style="margin-bottom: 2.5rem;">
-            <div class="glass-card">
-                <div class="metric-title">Total Users</div>
-                <div class="metric-value">{{ number_format($totalUsers) }}</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <div class="glass-card flex flex-col justify-center min-h-[140px]">
+                <div class="text-brand-text-secondary text-sm uppercase tracking-wider mb-2">Total Users</div>
+                <div class="text-brand-text-primary text-3xl sm:text-4xl font-bold">{{ number_format($totalUsers) }}</div>
             </div>
-            <div class="glass-card">
-                <div class="metric-title">Active Tenants</div>
-                <div class="metric-value">{{ number_format($totalTenants) }}</div>
+            <div class="glass-card flex flex-col justify-center min-h-[140px]">
+                <div class="text-brand-text-secondary text-sm uppercase tracking-wider mb-2">Active Tenants</div>
+                <div class="text-brand-text-primary text-3xl sm:text-4xl font-bold">{{ number_format($totalTenants) }}</div>
             </div>
-            <div class="glass-card">
-                <div class="metric-title">Global Tracked Savings</div>
-                <div class="metric-value" style="color: var(--success);">₹{{ number_format($globalSavings) }}</div>
+            <div class="glass-card flex flex-col justify-center min-h-[140px]">
+                <div class="text-brand-text-secondary text-sm uppercase tracking-wider mb-2">Global Tracked Savings</div>
+                <div class="text-brand-success text-3xl sm:text-4xl font-bold">₹{{ number_format($globalSavings) }}</div>
             </div>
-            <div class="glass-card">
-                <div class="metric-title">Global Tracked Debt</div>
-                <div class="metric-value" style="color: var(--danger);">₹{{ number_format($globalDebt) }}</div>
+            <div class="glass-card flex flex-col justify-center min-h-[140px]">
+                <div class="text-brand-text-secondary text-sm uppercase tracking-wider mb-2">Global Tracked Debt</div>
+                <div class="text-brand-danger text-3xl sm:text-4xl font-bold">₹{{ number_format($globalDebt) }}</div>
             </div>
         </div>
 
         <!-- Recent Users Table -->
         <div class="glass-card">
-            <h3 style="color: var(--text-primary); margin-bottom: 1.5rem; font-size: 1.25rem;">Recent Registrations</h3>
+            <h3 class="text-brand-text-primary text-xl font-semibold mb-6">Recent Registrations</h3>
             
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[800px]">
                     <thead>
-                        <tr style="border-bottom: 1px solid var(--border);">
-                            <th style="padding: 1rem 0; color: var(--text-secondary); font-weight: 500;">ID</th>
-                            <th style="padding: 1rem 0; color: var(--text-secondary); font-weight: 500;">Name</th>
-                            <th style="padding: 1rem 0; color: var(--text-secondary); font-weight: 500;">Email</th>
-                            <th style="padding: 1rem 0; color: var(--text-secondary); font-weight: 500;">Status</th>
-                            <th style="padding: 1rem 0; color: var(--text-secondary); font-weight: 500;">Registered Date</th>
+                        <tr class="border-b border-brand-border">
+                            <th class="py-4 text-brand-text-secondary font-medium">ID</th>
+                            <th class="py-4 text-brand-text-secondary font-medium">Name</th>
+                            <th class="py-4 text-brand-text-secondary font-medium">Email</th>
+                            <th class="py-4 text-brand-text-secondary font-medium">Status</th>
+                            <th class="py-4 text-brand-text-secondary font-medium">Registered Date</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($recentUsers as $user)
-                        <tr style="border-bottom: 1px solid var(--border);">
-                            <td style="padding: 1rem 0; color: var(--text-secondary);">#{{ $user->id }}</td>
-                            <td style="padding: 1rem 0; color: var(--text-primary);">
+                        <tr class="border-b border-brand-border hover:bg-white/5 transition-colors">
+                            <td class="py-4 text-brand-text-secondary">#{{ $user->id }}</td>
+                            <td class="py-4 text-brand-text-primary font-medium">
                                 {{ $user->name }}
                                 @if($user->is_admin)
-                                    <span style="background: rgba(168, 85, 247, 0.2); color: #a855f7; padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem;">ADMIN</span>
+                                    <span class="bg-[#a855f7]/20 text-[#a855f7] px-2 py-0.5 rounded text-xs ml-2 font-bold tracking-wider">ADMIN</span>
                                 @endif
                             </td>
-                            <td style="padding: 1rem 0; color: var(--text-secondary);">{{ $user->email }}</td>
-                            <td style="padding: 1rem 0;">
+                            <td class="py-4 text-brand-text-secondary">{{ $user->email }}</td>
+                            <td class="py-4">
                                 @if($user->is_onboarded)
-                                    <span style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.85rem;">Active</span>
+                                    <span class="bg-brand-success/20 text-brand-success px-3 py-1 rounded-full text-sm">Active</span>
                                 @else
-                                    <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 0.25rem 0.75rem; border-radius: 99px; font-size: 0.85rem;">Pending Onboarding</span>
+                                    <span class="bg-[#f59e0b]/20 text-[#f59e0b] px-3 py-1 rounded-full text-sm">Pending Onboarding</span>
                                 @endif
                             </td>
-                            <td style="padding: 1rem 0; color: var(--text-secondary);">{{ $user->created_at->format('M d, Y h:i A') }}</td>
+                            <td class="py-4 text-brand-text-secondary">{{ $user->created_at->format('M d, Y h:i A') }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -71,13 +71,4 @@
             </div>
         </div>
     </div>
-
-    <!-- Custom CSS for grid-4 -->
-    <style>
-        .grid-4 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-    </style>
 @endsection

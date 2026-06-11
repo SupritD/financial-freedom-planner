@@ -5,84 +5,86 @@
 
 @section('content')
     @if(session('success'))
-        <div style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div class="bg-brand-success/20 text-brand-success p-4 rounded-xl mb-6 flex justify-between items-center">
             <span>{{ session('success') }}</span>
-            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            <button onclick="this.parentElement.style.display='none'" class="text-brand-success hover:text-white transition-colors text-xl font-bold">&times;</button>
         </div>
     @endif
 
     @error('amount')
-        <div style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div class="bg-brand-danger/20 text-brand-danger p-4 rounded-xl mb-6 flex justify-between items-center">
             <span>{{ $message }}</span>
-            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            <button onclick="this.parentElement.style.display='none'" class="text-brand-danger hover:text-white transition-colors text-xl font-bold">&times;</button>
         </div>
     @enderror
 
-    <div class="grid-3">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach($goals as $goal)
-            <div class="glass-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3 style="color: var(--text-primary); font-size: 1.25rem;">{{ $goal['name'] }}</h3>
-                    @if($goal['is_completed'])
-                        <i class="ph-fill ph-check-circle" style="color: var(--success); font-size: 1.5rem;"></i>
-                    @else
-                        <i class="ph ph-target" style="color: var(--accent-primary); font-size: 1.5rem;"></i>
-                    @endif
-                </div>
-
-                <div style="margin-bottom: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                        <span style="color: var(--text-secondary);">Progress</span>
-                        <span style="color: var(--text-primary); font-weight: 600;">{{ $goal['percentage'] }}%</span>
+            <div class="glass-card flex flex-col justify-between h-full min-h-[250px]">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-brand-text-primary text-xl font-semibold">{{ $goal['name'] }}</h3>
+                        @if($goal['is_completed'])
+                            <i class="ph-fill ph-check-circle text-brand-success text-2xl"></i>
+                        @else
+                            <i class="ph ph-target text-brand-accent-primary text-2xl"></i>
+                        @endif
                     </div>
-                    
-                    <!-- Progress Bar -->
-                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden;">
-                        <div style="width: {{ $goal['percentage'] }}%; height: 100%; background: var(--accent-primary); border-radius: 99px;"></div>
-                    </div>
-                </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
-                    <div>
-                        <div class="metric-title" style="margin-bottom: 0.25rem;">Current / Target</div>
-                        <div style="font-size: 1.125rem; font-weight: 600;">
-                            ₹{{ number_format($goal['current_amount']) }} <span style="color: var(--text-secondary); font-size: 0.875rem;">/ ₹{{ number_format($goal['target_amount']) }}</span>
+                    <div class="mb-6">
+                        <div class="flex justify-between mb-2 text-sm">
+                            <span class="text-brand-text-secondary">Progress</span>
+                            <span class="text-brand-text-primary font-semibold">{{ $goal['percentage'] }}%</span>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-brand-accent-primary rounded-full transition-all duration-500" style="width: {{ $goal['percentage'] }}%;"></div>
                         </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div class="metric-title" style="margin-bottom: 0.25rem;">Deadline</div>
-                        <div style="color: var(--text-secondary); font-size: 0.875rem;">{{ $goal['deadline'] }}</div>
+
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <div class="text-brand-text-secondary text-xs uppercase tracking-wider mb-1">Current / Target</div>
+                            <div class="text-lg font-semibold text-brand-text-primary">
+                                ₹{{ number_format($goal['current_amount']) }} <span class="text-brand-text-secondary text-sm">/ ₹{{ number_format($goal['target_amount']) }}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-brand-text-secondary text-xs uppercase tracking-wider mb-1">Deadline</div>
+                            <div class="text-brand-text-secondary text-sm">{{ $goal['deadline'] }}</div>
+                        </div>
                     </div>
                 </div>
 
                 @if(!$goal['is_completed'])
-                    <button onclick="openContributeModal('{{ $goal['id'] }}', '{{ addslashes($goal['name']) }}')" class="btn-primary" style="width: 100%; padding: 0.75rem;">Contribute</button>
+                    <button onclick="openContributeModal('{{ $goal['id'] }}', '{{ addslashes($goal['name']) }}')" class="btn-primary w-full py-3 mt-auto">Contribute</button>
                 @endif
             </div>
         @endforeach
         
         <!-- Add New Goal Card -->
-        <div onclick="document.getElementById('goalModal').classList.add('active')" class="glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; border: 2px dashed var(--border); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-primary)';" onmouseout="this.style.borderColor='var(--border)';">
-            <i class="ph ph-plus" style="font-size: 2rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
-            <span style="color: var(--text-secondary); font-weight: 500;">Add New Goal</span>
+        <div onclick="document.getElementById('goalModal').classList.remove('hidden')" class="glass-card flex flex-col items-center justify-center min-h-[250px] border-2 border-dashed border-brand-border cursor-pointer transition-all duration-300 hover:border-brand-accent-primary group">
+            <i class="ph ph-plus text-4xl text-brand-text-secondary mb-4 group-hover:text-brand-accent-primary transition-colors"></i>
+            <span class="text-brand-text-secondary font-medium group-hover:text-brand-text-primary transition-colors">Add New Goal</span>
         </div>
     </div>
 
     <!-- Contribute Modal -->
-    <div id="contributeModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="contributeModalTitle">Contribute to Goal</h3>
-                <button class="close-btn" onclick="document.getElementById('contributeModal').classList.remove('active')">&times;</button>
+    <div id="contributeModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center p-4 hidden flex">
+        <div class="bg-brand-surface border border-brand-border rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="contributeModalTitle" class="text-xl font-semibold text-brand-text-primary">Contribute to Goal</h3>
+                <button class="text-brand-text-secondary hover:text-brand-text-primary text-2xl transition-colors focus:outline-none" onclick="document.getElementById('contributeModal').classList.add('hidden')">&times;</button>
             </div>
-            <form method="POST" action="{{ route('goals.contribute') }}">
+            <form method="POST" action="{{ route('goals.contribute') }}" class="space-y-6">
                 @csrf
                 <input type="hidden" name="goal_id" id="contributeGoalId">
-                <div class="form-group">
+                <div>
                     <label class="form-label">Contribution Amount (₹)</label>
                     <input type="number" step="1" name="amount" class="form-input" required placeholder="5000">
                 </div>
-                <button type="submit" class="btn-primary">Add Contribution</button>
+                <button type="submit" class="btn-primary w-full py-3">Add Contribution</button>
             </form>
         </div>
     </div>
@@ -91,32 +93,32 @@
         function openContributeModal(id, name) {
             document.getElementById('contributeGoalId').value = id;
             document.getElementById('contributeModalTitle').innerText = 'Contribute to ' + name;
-            document.getElementById('contributeModal').classList.add('active');
+            document.getElementById('contributeModal').classList.remove('hidden');
         }
     </script>
         
     <!-- Goal Modal -->
-    <div id="goalModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Create Financial Goal</h3>
-                <button class="close-btn" onclick="document.getElementById('goalModal').classList.remove('active')">&times;</button>
+    <div id="goalModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center p-4 hidden flex">
+        <div class="bg-brand-surface border border-brand-border rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-brand-text-primary">Create Financial Goal</h3>
+                <button class="text-brand-text-secondary hover:text-brand-text-primary text-2xl transition-colors focus:outline-none" onclick="document.getElementById('goalModal').classList.add('hidden')">&times;</button>
             </div>
-            <form method="POST" action="{{ route('goals.store') }}">
+            <form method="POST" action="{{ route('goals.store') }}" class="space-y-6">
                 @csrf
-                <div class="form-group">
+                <div>
                     <label class="form-label">Goal Name</label>
                     <input type="text" name="name" class="form-input" required placeholder="e.g. Emergency Fund">
                 </div>
-                <div class="form-group">
+                <div>
                     <label class="form-label">Target Amount (₹)</label>
                     <input type="number" step="1" name="target_amount" class="form-input" required placeholder="100000">
                 </div>
-                <div class="form-group">
+                <div>
                     <label class="form-label">Deadline (Optional)</label>
-                    <input type="date" name="deadline" class="form-input">
+                    <input type="date" name="deadline" class="form-input" style="color-scheme: dark;">
                 </div>
-                <button type="submit" class="btn-primary">Create Goal</button>
+                <button type="submit" class="btn-primary w-full py-3">Create Goal</button>
             </form>
         </div>
     </div>

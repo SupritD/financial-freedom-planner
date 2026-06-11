@@ -8,4 +8,39 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    
+    --color-brand-bg-dark: #0f111a;
+    --color-brand-surface: #1e2130;
+    --color-brand-border: #2a2d3e;
+    --color-brand-text-primary: #f8fafc;
+    --color-brand-text-secondary: #94a3b8;
+    --color-brand-accent-primary: #8b5cf6;
+    --color-brand-accent-secondary: #ec4899;
+    --color-brand-success: #10b981;
+    --color-brand-warning: #f59e0b;
+    --color-brand-danger: #ef4444;
+}
+
+@layer utilities {
+    .glass-card {
+        @apply bg-brand-surface/80 backdrop-blur-md border border-brand-border rounded-xl p-6 shadow-xl;
+    }
+    .form-input {
+        @apply w-full bg-brand-bg-dark border border-brand-border rounded-lg px-4 py-2 text-brand-text-primary focus:outline-none focus:border-brand-accent-primary focus:ring-1 focus:ring-brand-accent-primary transition-colors;
+    }
+    .btn-primary {
+        @apply bg-brand-accent-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-brand-accent-primary/90 transition-colors shadow-lg shadow-brand-accent-primary/20 cursor-pointer;
+    }
+    .btn-secondary {
+        @apply bg-brand-surface border border-brand-border text-brand-text-primary px-6 py-2 rounded-lg font-medium hover:border-brand-text-secondary transition-colors cursor-pointer;
+    }
+    .form-label {
+        @apply block text-brand-text-secondary text-sm font-medium mb-1;
+    }
+    .modal-overlay {
+        @apply fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden;
+    }
+    .modal-overlay.active {
+        @apply flex;
+    }
 }

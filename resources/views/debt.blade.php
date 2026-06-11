@@ -5,85 +5,88 @@
 
 @section('content')
     @if(session('success'))
-        <div style="background: rgba(16, 185, 129, 0.2); color: var(--success); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div class="bg-brand-success/20 text-brand-success p-4 rounded-xl mb-6 flex justify-between items-center">
             <span>{{ session('success') }}</span>
-            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            <button onclick="this.parentElement.style.display='none'" class="text-brand-success hover:text-white transition-colors text-xl font-bold">&times;</button>
         </div>
     @endif
 
     @error('amount')
-        <div style="background: rgba(239, 68, 68, 0.2); color: var(--danger); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div class="bg-brand-danger/20 text-brand-danger p-4 rounded-xl mb-6 flex justify-between items-center">
             <span>{{ $message }}</span>
-            <button onclick="this.parentElement.style.display='none'" style="background: none; border: none; color: inherit; font-size: 1.25rem; cursor: pointer;">&times;</button>
+            <button onclick="this.parentElement.style.display='none'" class="text-brand-danger hover:text-white transition-colors text-xl font-bold">&times;</button>
         </div>
     @enderror
 
-    <div class="grid-3">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach($debts as $debt)
-            <div class="glass-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div>
-                        <h3 style="color: var(--text-primary); font-size: 1.25rem; margin-bottom: 0.25rem;">{{ $debt['name'] }}</h3>
-                        <span class="badge" style="background: rgba(255,255,255,0.1); color: var(--text-secondary);">{{ $debt['type'] }}</span>
+            <div class="glass-card flex flex-col justify-between h-full min-h-[250px]">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-brand-text-primary text-xl font-semibold mb-1">{{ $debt['name'] }}</h3>
+                            <span class="inline-block px-2 py-1 rounded bg-white/10 text-brand-text-secondary text-xs uppercase tracking-wider">{{ str_replace('_', ' ', $debt['type']) }}</span>
+                        </div>
+                        @if($debt['is_paid_off'])
+                            <i class="ph-fill ph-check-circle text-brand-success text-3xl"></i>
+                        @else
+                            <i class="ph ph-bank text-brand-danger text-3xl"></i>
+                        @endif
                     </div>
-                    @if($debt['is_paid_off'])
-                        <i class="ph-fill ph-check-circle" style="color: var(--success); font-size: 1.5rem;"></i>
-                    @else
-                        <i class="ph ph-bank" style="color: var(--danger); font-size: 1.5rem;"></i>
-                    @endif
-                </div>
 
-                <div style="margin-bottom: 1.5rem;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.875rem;">
-                        <span style="color: var(--text-secondary);">Payoff Progress</span>
-                        <span style="color: var(--text-primary); font-weight: 600;">{{ $debt['percentage'] }}%</span>
-                    </div>
-                    
-                    <!-- Progress Bar -->
-                    <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 99px; overflow: hidden;">
-                        <div style="width: {{ $debt['percentage'] }}%; height: 100%; background: var(--success); border-radius: 99px;"></div>
-                    </div>
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem;">
-                    <div>
-                        <div class="metric-title" style="margin-bottom: 0.25rem;">Remaining Balance</div>
-                        <div style="font-size: 1.125rem; font-weight: 600; color: var(--danger);">
-                            ₹{{ number_format($debt['current_balance']) }}
+                    <div class="mb-6">
+                        <div class="flex justify-between mb-2 text-sm">
+                            <span class="text-brand-text-secondary">Payoff Progress</span>
+                            <span class="text-brand-text-primary font-semibold">{{ $debt['percentage'] }}%</span>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div class="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div class="h-full bg-brand-success rounded-full transition-all duration-500" style="width: {{ $debt['percentage'] }}%;"></div>
                         </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div class="metric-title" style="margin-bottom: 0.25rem;">Interest Rate</div>
-                        <div style="color: var(--text-secondary); font-size: 1rem; font-weight: 600;">{{ number_format($debt['interest_rate'], 1) }}% APR</div>
+
+                    <div class="flex justify-between items-end mb-6">
+                        <div>
+                            <div class="text-brand-text-secondary text-xs uppercase tracking-wider mb-1">Remaining Balance</div>
+                            <div class="text-lg font-semibold text-brand-danger">
+                                ₹{{ number_format($debt['current_balance']) }}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-brand-text-secondary text-xs uppercase tracking-wider mb-1">Interest Rate</div>
+                            <div class="text-brand-text-primary font-semibold">{{ number_format($debt['interest_rate'], 1) }}% APR</div>
+                        </div>
                     </div>
                 </div>
 
                 @if(!$debt['is_paid_off'])
-                    <button onclick="openPaymentModal('{{ $debt['id'] ?? '' }}', '{{ addslashes($debt['name']) }}')" class="btn-primary" style="width: 100%; padding: 0.75rem; background: var(--success);">Make Payment</button>
+                    <button onclick="openPaymentModal('{{ $debt['id'] ?? '' }}', '{{ addslashes($debt['name']) }}')" class="btn-primary w-full py-3 mt-auto !bg-brand-success hover:!bg-brand-success/90 shadow-lg shadow-brand-success/20">Make Payment</button>
                 @endif
             </div>
         @endforeach
+        
         <!-- Add New Debt Card -->
-        <div onclick="document.getElementById('debtModal').classList.add('active')" class="glass-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 200px; border: 2px dashed var(--border); cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--danger)';" onmouseout="this.style.borderColor='var(--border)';">
-            <i class="ph ph-plus" style="font-size: 2rem; color: var(--text-secondary); margin-bottom: 1rem;"></i>
-            <span style="color: var(--text-secondary); font-weight: 500;">Add Debt Account</span>
+        <div onclick="document.getElementById('debtModal').classList.remove('hidden')" class="glass-card flex flex-col items-center justify-center min-h-[250px] border-2 border-dashed border-brand-border cursor-pointer transition-all duration-300 hover:border-brand-danger group">
+            <i class="ph ph-plus text-4xl text-brand-text-secondary mb-4 group-hover:text-brand-danger transition-colors"></i>
+            <span class="text-brand-text-secondary font-medium group-hover:text-brand-text-primary transition-colors">Add Debt Account</span>
         </div>
     </div>
 
     <!-- Debt Modal -->
-    <div id="debtModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Track New Debt</h3>
-                <button class="close-btn" onclick="document.getElementById('debtModal').classList.remove('active')">&times;</button>
+    <div id="debtModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center p-4 hidden flex">
+        <div class="bg-brand-surface border border-brand-border rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-brand-text-primary">Track New Debt</h3>
+                <button class="text-brand-text-secondary hover:text-brand-text-primary text-2xl transition-colors focus:outline-none" onclick="document.getElementById('debtModal').classList.add('hidden')">&times;</button>
             </div>
-            <form method="POST" action="{{ route('debt.store') }}">
+            <form method="POST" action="{{ route('debt.store') }}" class="space-y-6">
                 @csrf
-                <div class="form-group">
+                <div>
                     <label class="form-label">Debt Name / Lender</label>
                     <input type="text" name="name" class="form-input" required placeholder="e.g. HDFC Car Loan">
                 </div>
-                <div class="form-group">
+                <div>
                     <label class="form-label">Debt Type</label>
                     <select name="type" class="form-input" required>
                         <option value="credit_card">Credit Card</option>
@@ -93,34 +96,34 @@
                         <option value="student_loan">Student Loan</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div>
                     <label class="form-label">Total Outstanding Balance (₹)</label>
                     <input type="number" step="1" name="principal_amount" class="form-input" required placeholder="500000">
                 </div>
-                <div class="form-group">
+                <div>
                     <label class="form-label">Interest Rate (APR %)</label>
                     <input type="number" step="0.1" name="interest_rate" class="form-input" required placeholder="10.5">
                 </div>
-                <button type="submit" class="btn-primary btn-danger">Track Debt</button>
+                <button type="submit" class="btn-primary w-full py-3 !bg-brand-danger hover:!bg-brand-danger/90 shadow-lg shadow-brand-danger/20">Track Debt</button>
             </form>
         </div>
     </div>
 
     <!-- Payment Modal -->
-    <div id="paymentModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="paymentModalTitle">Make Payment</h3>
-                <button class="close-btn" onclick="document.getElementById('paymentModal').classList.remove('active')">&times;</button>
+    <div id="paymentModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 items-center justify-center p-4 hidden flex">
+        <div class="bg-brand-surface border border-brand-border rounded-3xl p-6 sm:p-8 w-full max-w-md shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="paymentModalTitle" class="text-xl font-semibold text-brand-text-primary">Make Payment</h3>
+                <button class="text-brand-text-secondary hover:text-brand-text-primary text-2xl transition-colors focus:outline-none" onclick="document.getElementById('paymentModal').classList.add('hidden')">&times;</button>
             </div>
-            <form method="POST" action="{{ route('debt.payment') }}">
+            <form method="POST" action="{{ route('debt.payment') }}" class="space-y-6">
                 @csrf
                 <input type="hidden" name="debt_id" id="paymentDebtId">
-                <div class="form-group">
+                <div>
                     <label class="form-label">Payment Amount (₹)</label>
                     <input type="number" step="1" name="amount" class="form-input" required placeholder="5000">
                 </div>
-                <button type="submit" class="btn-primary btn-success">Submit Payment</button>
+                <button type="submit" class="btn-primary w-full py-3 !bg-brand-success hover:!bg-brand-success/90 shadow-lg shadow-brand-success/20">Submit Payment</button>
             </form>
         </div>
     </div>
@@ -129,7 +132,7 @@
         function openPaymentModal(id, name) {
             document.getElementById('paymentDebtId').value = id;
             document.getElementById('paymentModalTitle').innerText = 'Make Payment towards ' + name;
-            document.getElementById('paymentModal').classList.add('active');
+            document.getElementById('paymentModal').classList.remove('hidden');
         }
     </script>
 @endsection
